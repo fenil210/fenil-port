@@ -1,0 +1,6 @@
+// Cloudflare Workers serves the built site as static files; there is no server code.
+{
+  "name": "fenil-ramoliya",
+  "compatibility_date": "2026-09-01",
+  "assets": { "directory": "./dist" }
+}
