@@ -159,34 +159,12 @@ export const systems: System[] = [
   },
 ];
 
-export const domain = {
-  principles: [
-    {
-      name: 'The author stays the author.',
-      text: 'Models suggest, explain and check. Every change is visible and reversible, and the ideas remain the researcher’s own.',
-    },
-    {
-      name: 'Unpublished work is confidential.',
-      text: 'A draft is someone’s unreleased research. It gets the least access, the shortest retention and no reuse.',
-    },
-    {
-      name: 'Every judgement shows its evidence.',
-      text: 'Scores and flags come with the reason and the source, so a researcher can check them and disagree.',
-    },
-    {
-      name: 'References must be real.',
-      text: 'A citation is checked against scholarly records before anyone sees it. A plausible reference that does not exist is the worst failure in this domain.',
-    },
-    {
-      name: 'Each field keeps its norms.',
-      text: 'Methods, citation styles and journal expectations differ by discipline. Checks follow the field, not one house style.',
-    },
-    {
-      name: 'Changes are measured before they ship.',
-      text: 'A model change is evaluated on real cases from the field first, the same standard a paper is held to.',
-    },
-  ],
-};
+// what holds for anything built for researchers; shown under the systems
+export const principles = [
+  { name: 'The author stays the author.', text: 'Models suggest, explain and check. Every change is visible and reversible.' },
+  { name: 'Unpublished work is confidential.', text: 'A draft gets the least access, the shortest retention and no reuse.' },
+  { name: 'References must be real.', text: 'Every citation is checked against scholarly records before anyone sees it.' },
+];
 
 export const projects = [
   {

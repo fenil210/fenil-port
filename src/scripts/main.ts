@@ -496,7 +496,7 @@ if (!reduced) {
     },
     { rootMargin: '0px 0px -8% 0px' },
   );
-  const groups = ['.section-head', '.principles li', '.rows li', '.papers li', '.recognition li', '.stats > div', '.contact-links li'];
+  const groups = ['.section-head', '.rows li', '.papers li', '.recognition li', '.stats > div', '.contact-links li'];
   document.querySelectorAll<HTMLElement>(groups.join(',')).forEach((el) => {
     const i = el.parentElement ? [...el.parentElement.children].indexOf(el) : 0;
     el.style.transitionDelay = `${Math.min(i, 8) * 60}ms`;

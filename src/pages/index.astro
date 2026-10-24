@@ -10,7 +10,7 @@ import Figure from '../components/Figure.astro';
 import IndiaMap from '../components/IndiaMap.astro';
 import { atlas } from '../lib/atlas';
 import { drawGlobe, SIZE, VIEW } from '../lib/globe';
-import { domain, hero, links, papers, path, projects, recognition, research, systems, themes, travel, writing, years } from '../lib/content';
+import { hero, links, papers, path, principles, projects, recognition, research, systems, themes, travel, writing, years } from '../lib/content';
 
 const fmt = (iso: string) =>
   new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
@@ -38,7 +38,6 @@ const description =
 const spans = [
   { id: 'top', name: 'Introduction' },
   { id: 'work', name: 'Systems' },
-  { id: 'domain', name: 'Principles' },
   { id: 'research', name: 'Research' },
   { id: 'projects', name: 'Projects' },
   { id: 'articles', name: 'Articles' },
@@ -71,6 +70,14 @@ const nav = [
     <meta property="og:description" content={description} />
     <meta property="og:url" content={Astro.site} />
     <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <!-- iMessage plays this in the link preview; everything else shows the image -->
+    <meta property="og:video" content={new URL('/og.mp4', Astro.site)} />
+    <meta property="og:video:secure_url" content={new URL('/og.mp4', Astro.site)} />
+    <meta property="og:video:type" content="video/mp4" />
+    <meta property="og:video:width" content="1200" />
+    <meta property="og:video:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@fenillramoliya" />
     <meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)" />
@@ -143,21 +150,19 @@ const nav = [
             </div>
           </div>
         </div>
-      </section>
 
-      <section class="section wrap" id="domain">
-        <h2 class="section-head">Building for research</h2>
-        <div class="principles">
-          <ol>
+        <div class="recognition principles">
+          <p class="label-inline">Building for research</p>
+          <ul>
             {
-              domain.principles.map((d) => (
+              principles.map((p) => (
                 <li>
-                  <h3>{d.name}</h3>
-                  <p>{d.text}</p>
+                  <span class="what">{p.name}</span>
+                  <span class="where">{p.text}</span>
                 </li>
               ))
             }
-          </ol>
+          </ul>
         </div>
       </section>
 
