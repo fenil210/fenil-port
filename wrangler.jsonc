@@ -6,7 +6,7 @@
   "compatibility_date": "2026-09-01",
   "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/og.mp4"] },
   "observability": {
-    "logs": { "enabled": false, "head_sampling_rate": 1, "invocation_logs": true, "persist": true },
+    "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true, "persist": true },
     "traces": { "enabled": true, "head_sampling_rate": 1, "persist": true }
   }
 }
