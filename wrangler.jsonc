@@ -1,6 +1,8 @@
-// Cloudflare Workers serves the built site as static files; there is no server code.
+// Cloudflare Workers serves the built site as static files. Only the preview video goes
+// through worker/index.ts first, so that it can answer byte-range requests.
 {
   "name": "fenil-ramoliya",
+  "main": "./worker/index.ts",
   "compatibility_date": "2026-09-01",
-  "assets": { "directory": "./dist" }
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/og.mp4"] }
 }

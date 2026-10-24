@@ -1,15 +1,16 @@
 /* ───────── tokens ───────── */
 
+/* dark for everyone; light only when the reader picks it with the toggle */
 :root {
-  --paper: #f6f6f3;
-  --ink: #121211;
-  --ink-2: #57574f;
-  --muted: #9a9a92;
-  --rule: #deded8;
-  --shade: #e8e8e3;
-  --accent: #2a37e8;
-  --tint: #dfe1fb;
-  --on-accent: #ffffff;
+  --paper: #0f0f0e;
+  --ink: #ecebe6;
+  --ink-2: #a5a59d;
+  --muted: #64645e;
+  --rule: #262624;
+  --shade: #1a1a19;
+  --accent: #8e98ff;
+  --tint: #23264a;
+  --on-accent: #0f0f0e;
 
   --s1: 8px;
   --s2: 16px;
@@ -24,35 +25,20 @@
   --max: 1360px;
   --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
 
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --paper: #0f0f0e;
-    --ink: #ecebe6;
-    --ink-2: #a5a59d;
-    --muted: #64645e;
-    --rule: #262624;
-    --shade: #1a1a19;
-    --accent: #8e98ff;
-    --tint: #23264a;
-    --on-accent: #0f0f0e;
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme='dark'] {
-  --paper: #0f0f0e;
-  --ink: #ecebe6;
-  --ink-2: #a5a59d;
-  --muted: #64645e;
-  --rule: #262624;
-  --shade: #1a1a19;
-  --accent: #8e98ff;
-  --tint: #23264a;
-  --on-accent: #0f0f0e;
   color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --paper: #f6f6f3;
+  --ink: #121211;
+  --ink-2: #57574f;
+  --muted: #9a9a92;
+  --rule: #deded8;
+  --shade: #e8e8e3;
+  --accent: #2a37e8;
+  --tint: #dfe1fb;
+  --on-accent: #ffffff;
+  color-scheme: light;
 }
 
 /* ───────── base ───────── */
@@ -654,6 +640,16 @@ figcaption .ref {
 .section-head {
   max-width: 14em;
   margin-bottom: var(--s4);
+}
+
+/* a line under a heading, set like the hero's lede */
+.section-dek {
+  max-width: 30em;
+  margin: calc(var(--s3) - var(--s4)) 0 var(--s4);
+  color: var(--ink-2);
+  font-size: clamp(20px, 1.6vw, 23px);
+  line-height: 1.5;
+  text-wrap: pretty;
 }
 
 h2 {

@@ -10,10 +10,10 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const themeBtn = document.querySelector<HTMLButtonElement>('.theme');
 themeBtn?.addEventListener('click', () => {
-  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-  const next = dark ? 'light' : 'dark';
+  const next = root.dataset.theme === 'light' ? 'dark' : 'light';
   const apply = () => {
     root.dataset.theme = next;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'light' ? '#f6f6f3' : '#0f0f0e');
     try {
       localStorage.setItem('theme', next);
     } catch {}

@@ -80,13 +80,13 @@ const nav = [
     <meta property="og:video:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@fenillramoliya" />
-    <meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0f0f0e" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#0f0f0e" />
     <script is:inline>
       document.documentElement.classList.add('js');
       try {
         const t = localStorage.getItem('theme');
         if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+        if (t === 'light') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f6f3');
       } catch {}
     </script>
   </head>
@@ -331,6 +331,7 @@ const nav = [
 
       <section class="section wrap" id="travel">
         <h2 class="section-head">Elsewhere</h2>
+        <p class="section-dek">A travel geek away from work: always planning the next trip, and wandering off the plan once I get there.</p>
 
         <dl class="stats">
           <div><dt>{travel.countries.length}</dt><dd>countries abroad</dd></div>
