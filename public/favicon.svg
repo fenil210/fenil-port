@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .e { fill: #f6f6f3; stroke: #121211; }
+    .s { fill: #e8e8e3; stroke: #121211; }
+    .t { fill: #2a37e8; stroke: #2a37e8; }
+    @media (prefers-color-scheme: dark) {
+      .e { fill: #0f0f0e; stroke: #ecebe6; }
+      .s { fill: #1a1a19; stroke: #ecebe6; }
+      .t { fill: #8e98ff; stroke: #8e98ff; }
+    }
+  </style>
+  <g stroke-width="2" stroke-linejoin="round">
+    <path class="e" d="M4 10.5 16 17v12L4 22.5z" />
+    <path class="s" d="M28 10.5 16 17v12l12-6.5z" />
+    <path class="t" d="M16 4 28 10.5 16 17 4 10.5z" />
+  </g>
+</svg>

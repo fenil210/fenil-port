@@ -1,0 +1,436 @@
+---
+import '@fontsource-variable/newsreader/opsz.css';
+import '@fontsource-variable/newsreader/opsz-italic.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '../styles/global.css';
+
+import Arrow from '../components/Arrow.astro';
+import Figure from '../components/Figure.astro';
+import IndiaMap from '../components/IndiaMap.astro';
+import { atlas } from '../lib/atlas';
+import { drawGlobe, HOME_VIEW, SIZE } from '../lib/globe';
+import type { Glyph } from '../lib/scenes';
+import { domain, hero, links, papers, path, projects, recognition, research, systems, themes, travel, writing, years } from '../lib/content';
+
+const fmt = (iso: string) =>
+  new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+
+// experience chart: a year scale from the first stint to the year after today
+const asYear = (d: Date) => d.getFullYear() + (d.getMonth() + (d.getDate() - 1) / 31) / 12;
+const today = asYear(new Date());
+const t0 = Math.floor(Math.min(...path.map((p) => p.from)));
+const t1 = Math.ceil(today + 0.15);
+const at = (y: number) => +(((y - t0) / (t1 - t0)) * 100).toFixed(3);
+const scale = Array.from({ length: t1 - t0 }, (_, i) => t0 + i);
+// papers sit as ticks spread across the year they came out, never past today
+const ticks = scale.flatMap((y) => {
+  const these = papers.filter((p) => p.y === y);
+  const span = Math.min(1, today - y);
+  return these.map((p, i) => ({ x: at(y + ((i + 0.5) / these.length) * span), j: !!p.j }));
+});
+// a riser joins each job to the one before it
+const prev = (i: number) => (path[i].kind === 'job' && path[i + 1]?.kind === 'job' ? path[i + 1] : undefined);
+
+const title = 'Fenil Ramoliya · Software Engineer, AI';
+const description =
+  'Fenil Ramoliya builds AI agents and the systems they run on: harnesses and runtimes, tools and protocols, and the infrastructure that keeps them fast, affordable and correct under real traffic.';
+// one module on the corner board per section, in reading order
+const parts: { id: string; name: string; glyph: Glyph }[] = [
+  { id: 'work', name: 'Systems', glyph: 'agents' },
+  { id: 'domain', name: 'Principles', glyph: 'book' },
+  { id: 'research', name: 'Research', glyph: 'papers' },
+  { id: 'projects', name: 'Projects', glyph: 'tools' },
+  { id: 'notes', name: 'Notes', glyph: 'notes' },
+  { id: 'experience', name: 'Experience', glyph: 'steps' },
+  { id: 'travel', name: 'Travel', glyph: 'globe' },
+  { id: 'contact', name: 'Contact', glyph: 'letter' },
+];
+const nav = [
+  { id: 'work', name: 'Work' },
+  { id: 'research', name: 'Research' },
+  { id: 'projects', name: 'Projects' },
+  { id: 'notes', name: 'Notes' },
+  { id: 'experience', name: 'Experience' },
+  { id: 'travel', name: 'Travel' },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Fenil Ramoliya" />
+    <link rel="canonical" href={Astro.site} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={Astro.site} />
+    <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@fenillramoliya" />
+    <meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f0f0e" media="(prefers-color-scheme: dark)" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      try {
+        const t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="masthead">
+      <div class="wrap masthead-row">
+        <a class="wordmark" href="#top" aria-label="Fenil Ramoliya, back to top">Fenil Ramoliya</a>
+        <nav aria-label="Sections">
+          <ul>
+            {nav.map((s) => <li><a href={`#${s.id}`}>{s.name}</a></li>)}
+          </ul>
+        </nav>
+        <a class="btn btn-sm btn-ghost" href={`mailto:${links.email}`}>Email</a>
+        <button class="theme" type="button" aria-label="Switch colour theme">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25" /><path d="M10 2.75a7.25 7.25 0 0 1 0 14.5z" /></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero wrap" id="top">
+        <div class="hero-copy">
+          <h1 class="display">{hero.title.map((t) => <span>{t}</span>)}</h1>
+          <p class="lede">{hero.lede}</p>
+          <ul class="hero-links">
+            <li><a class="btn" href={`mailto:${links.email}`}>Write to me</a></li>
+            <li><a href={links.github} rel="me">GitHub</a></li>
+            <li><a href={links.linkedin} rel="me">LinkedIn</a></li>
+            <li><a href={links.scholar}>Scholar</a></li>
+            <li><a href={links.x} rel="me">X</a></li>
+          </ul>
+        </div>
+        <Figure name="hero" no="1" legend={hero.legend} live class="hero-fig" />
+      </section>
+
+      <section class="section wrap" id="work">
+        <h2 class="section-head">Systems in production</h2>
+
+        <div class="systems">
+          <div class="systems-list">
+            {
+              systems.map((s) => (
+                <article class="system" id={s.id} data-fig={s.fig}>
+                  <h3>{s.name}</h3>
+                  <p class="body">{s.body}</p>
+                  <ul class="inside">
+                    {s.inside.map((i) => <li>{i}</li>)}
+                  </ul>
+                  <p class="stack">{s.stack}</p>
+                  <div class="fig-slot" />
+                </article>
+              ))
+            }
+          </div>
+          <div class="systems-stage" aria-live="off">
+            <div class="stage-inner">
+              {systems.map((s, i) => <Figure name={s.fig} no={s.figNo} legend={s.legend} class:list={['stage-fig', i === 0 && 'on']} />)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section wrap" id="domain">
+        <h2 class="section-head">Building for research</h2>
+        <div class="principles">
+          <div class="context">
+            <p>{domain.work}</p>
+            <p>{domain.origin}</p>
+          </div>
+          <ol>
+            {
+              domain.principles.map((d) => (
+                <li>
+                  <h3>{d.name}</h3>
+                  <p>{d.text}</p>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+      </section>
+
+      <section class="section wrap" id="research">
+        <h2 class="section-head">Private, explainable, secure.</h2>
+
+        <dl class="stats">
+          {
+            research.stats.map((s) => (
+              <div>
+                <dt>{s.value}</dt>
+                <dd>{s.label}</dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        <figure class="fig matrix" id="fig-7">
+          <div class="matrix-grid" role="group" aria-label="All 28 papers by theme and year">
+            <span class="matrix-corner" aria-hidden="true"></span>
+            {years.map((y) => <span class="matrix-year" aria-hidden="true">{y}</span>)}
+            {
+              themes.map((th) => (
+                <>
+                  <span class="matrix-theme">
+                    {th.name}
+                    <span class="matrix-count">{papers.filter((p) => p.th === th.id).length}</span>
+                  </span>
+                  {years.map((y) => (
+                    <span class="matrix-cell">
+                      {papers
+                        .filter((p) => p.th === th.id && p.y === y)
+                        .sort((a, b) => Number(!!b.j) - Number(!!a.j))
+                        .map((p) => (
+                          <button
+                            type="button"
+                            class:list={['mark', p.j && 'journal']}
+                            data-title={p.t}
+                            data-meta={`${p.v}, ${p.y}${p.j ? ' · journal article' : ''}${p.first ? ' · first author' : ''}`}
+                            aria-label={`${p.t}. ${p.v}, ${p.y}.`}
+                          />
+                        ))}
+                    </span>
+                  ))}
+                </>
+              ))
+            }
+          </div>
+          <figcaption>
+            <span class="fig-no">Fig. 7</span>
+            <span class="matrix-readout" aria-live="polite">
+              <span class="readout-default"><span class="key key-j"></span> Journal article <span class="key"></span> Conference paper</span>
+              <span class="readout-title"></span>
+              <span class="readout-meta"></span>
+            </span>
+          </figcaption>
+        </figure>
+
+        <div class="papers">
+          <p class="label-inline">Most cited</p>
+          <ol>
+            {
+              research.selected.map((p) => (
+                <li>
+                  <p class="paper-title">{p.title}</p>
+                  <p class="paper-meta">
+                    {p.venue}, {p.year}
+                    {p.first && <span> · first author</span>}
+                    {p.cites && <span> · {p.cites} citations</span>}
+                  </p>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+        <p class="more"><a href={links.scholar}>All papers on Google Scholar</a></p>
+      </section>
+
+      <section class="section wrap" id="projects">
+        <h2 class="section-head">Small tools, built after hours</h2>
+        <ol class="rows projects">
+          {
+            projects.map((p) => (
+              <li>
+                <a href={p.href}>
+                  <span class="row-year">{p.year}</span>
+                  <span class="row-name">{p.name}</span>
+                  <span class="row-text">{p.text}</span>
+                  <Arrow />
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+        <p class="more"><a href={links.github}>All repositories on GitHub</a></p>
+      </section>
+
+      <section class="section wrap" id="notes">
+        <h2 class="section-head">Notes from the work</h2>
+        <ol class="rows notes">
+          {
+            writing.map((w) => (
+              <li>
+                <a href={w.href}>
+                  <time datetime={w.date}>{fmt(w.date)}</time>
+                  <span class="row-name">{w.title}</span>
+                  <Arrow />
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+
+      <section class="section wrap" id="experience">
+        <h2 class="section-head">Experience</h2>
+        <div class="chart" data-t0={t0} data-t1={t1} style={`--now:${at(today)};--years:${t1 - t0}`}>
+          <div class="chart-axis lane" aria-hidden="true">
+            {
+              scale.map((y) => (
+                <span class="year" style={`--x:${at(y + 0.5)}`}>
+                  <span class="long">{y}</span>
+                  <span class="short">’{String(y).slice(2)}</span>
+                </span>
+              ))
+            }
+            <span class="now-label">Now</span>
+          </div>
+          <ol class="chart-rows">
+            {
+              path.map((p, i) => (
+                <li class:list={['stint', p.kind, p.to === undefined && 'current']} style={`--i:${path.length - 1 - i}`}>
+                  <p class="stint-label">
+                    <span class="role">{p.role}</span>
+                    <span class="where">{p.where}</span>
+                    <span class="dates">{p.when}</span>
+                  </p>
+                  <div class="lane" aria-hidden="true">
+                    {p.kind === 'pubs' ? (
+                      ticks.map((t) => <span class:list={['tick', t.j && 'journal']} style={`--x:${t.x}`} />)
+                    ) : (
+                      <span class="bar" style={`--a:${at(p.from)};--b:${p.to === undefined ? 'var(--now)' : at(p.to)}`} />
+                    )}
+                    {prev(i) && <span class="riser" style={`--a:${at(prev(i)!.to!)};--b:${at(p.from)}`} />}
+                    {p.to === undefined && <span class="ahead" />}
+                  </div>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+        <div class="recognition">
+          <p class="label-inline">Recognition</p>
+          <ul>
+            {
+              recognition.map((r) => (
+                <li>
+                  <span class="what">{r.what}</span>
+                  <span class="where">{r.where}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </section>
+
+      <section class="section wrap" id="travel">
+        <h2 class="section-head">Elsewhere</h2>
+
+        <dl class="stats">
+          <div><dt>{travel.countries.length}</dt><dd>countries abroad</dd></div>
+          <div><dt>{travel.continents}</dt><dd>continents</dd></div>
+          <div><dt>{travel.visited}<span class="of"> of {travel.stateCount}</span></dt><dd>states of India</dd></div>
+        </dl>
+
+        <div class="atlas">
+          <figure class="fig globe" id="fig-9">
+            <div class="globe-frame">
+              <svg class="globe-svg" viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label={`Globe with the night side shaded as it is now, and arcs from Mumbai to ${travel.countries.map((c) => c.name).join(', ')}.`}>
+                <defs>
+                  <pattern id="g-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <line x1="0" y1="0" x2="0" y2="5"></line>
+                  </pattern>
+                </defs>
+                <g class="globe-body" set:html={drawGlobe(atlas, { rotate: HOME_VIEW, now: new Date() })} />
+              </svg>
+            </div>
+            <figcaption>
+              <span class="fig-no">Fig. 9</span>
+              <ol class="legend">
+                {
+                  travel.countries.map((c, i) => (
+                    <li>
+                      <span class="ref" data-id={c.id}>{i + 1}</span>
+                      {c.name}
+                      <time class="tz" data-tz={c.tz} />
+                    </li>
+                  ))
+                }
+                <li class="night-key"><span class="key key-night"></span>Night, now</li>
+              </ol>
+            </figcaption>
+          </figure>
+
+          <figure class="fig india" id="fig-10">
+            <IndiaMap />
+            <figcaption>
+              <span class="fig-no">Fig. 10</span>
+              <span class="matrix-readout" aria-live="polite">
+                <span class="readout-default"><span class="key key-hatch"></span> Visited <span class="key key-home"></span> Home, Mumbai</span>
+                <span class="readout-title"></span>
+                <span class="readout-meta"></span>
+              </span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section wrap contact" id="contact">
+        <h2 class="contact-mail">
+          <a href={`mailto:${links.email}`}>{links.email.split('@')[0]}<wbr />@{links.email.split('@')[1]}</a>
+        </h2>
+        <p class="intro">
+          Write if you are building with agents, running LLMs in production, or want to talk about research.{' '}
+          <span class="clock" data-tz="Asia/Kolkata">I live in Mumbai, on IST.</span>
+        </p>
+        <ul class="contact-links">
+          <li><a href={links.github} rel="me">GitHub</a></li>
+          <li><a href={links.linkedin} rel="me">LinkedIn</a></li>
+          <li><a href={links.scholar}>Google Scholar</a></li>
+          <li><a href={links.x} rel="me">X</a></li>
+        </ul>
+      </section>
+    </main>
+
+    <aside class="assembly" aria-label="Reading progress" data-glyphs={parts.map((p) => p.glyph).join(' ')}>
+      <div class="asm-panel" id="asm-parts">
+        <ol class="asm-list">
+          {
+            parts.map((p, i) => (
+              <li>
+                <a href={`#${p.id}`} data-i={i}>
+                  <span class="ref">{i + 1}</span>
+                  {p.name}
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+      <button class="asm-board" type="button" aria-expanded="false" aria-controls="asm-parts" aria-label="Sections of this page">
+        <svg class="axo mini" aria-hidden="true"></svg>
+      </button>
+      <p class="asm-status">
+        <span class="fig-no">Fig. 0</span>
+        <span class="asm-line">
+          <span class="asm-count"><b>0</b> of {parts.length}</span>
+          <span class="asm-note" aria-live="polite"></span>
+          <span class="asm-done"><span class="asm-word">Assembled. </span><a href={`mailto:${links.email}`}>Write to me</a></span>
+        </span>
+      </p>
+    </aside>
+
+    <footer class="wrap colophon">
+      <p>© 2026 Fenil Ramoliya</p>
+      <p>Maps from <a href="https://www.naturalearthdata.com">Natural Earth</a> and <a href="https://github.com/datameet/maps">DataMeet</a>, CC BY 4.0</p>
+    </footer>
+
+    <script>
+      import '../scripts/main';
+    </script>
+  </body>
+</html>

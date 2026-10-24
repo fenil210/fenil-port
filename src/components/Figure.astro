@@ -1,0 +1,51 @@
+---
+import { frameToString, render } from '../lib/axo';
+import { figures, type FigureName } from '../lib/scenes';
+import type { Legend } from '../lib/content';
+
+interface Props {
+  name: FigureName;
+  no: string;
+  legend: Legend;
+  live?: boolean;
+  class?: string;
+  id?: string;
+}
+
+const { name, no, legend, live = false, class: cls, id } = Astro.props;
+const def = figures[name];
+const frame = render(def.build(def.cam), def.cam);
+const [x, y, w, h] = frame.box;
+// stroke and type are scaled against this width until the client measures the real one
+const k = (w / 560).toFixed(4);
+const plain = `Figure ${no}: ${legend.map(([n, part]) => `${part} (${n})`).join(', ')}`;
+---
+
+<figure class:list={['fig', cls]} data-fig={name} id={id}>
+  <div class="fig-frame">
+    <svg
+      class="axo"
+      viewBox={`${x} ${y} ${w} ${h}`}
+      data-scene={name}
+      data-live={live ? '' : undefined}
+      data-box={frame.box.join(' ')}
+      style={`--k:${k};aspect-ratio:${w}/${h}`}
+      role="img"
+      aria-label={plain}
+      set:html={frameToString(frame)}
+    />
+  </div>
+  <figcaption>
+    <span class="fig-no">Fig. {no}</span>
+    <ol class="legend">
+      {
+        legend.map(([n, part]) => (
+          <li>
+            <span class="ref" data-ref={n}>{n}</span>
+            {part}
+          </li>
+        ))
+      }
+    </ol>
+  </figcaption>
+</figure>
