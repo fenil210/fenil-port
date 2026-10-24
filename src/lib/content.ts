@@ -160,10 +160,6 @@ export const systems: System[] = [
 ];
 
 export const domain = {
-  work:
-    'Most of my work is on Paperpal. Around it, Cactus works with publishers, journals, scholarly societies, universities, research funders and life-science companies, and I have worked on a range of those engagements too. Most of them start open-ended. Taking one from a proof of concept to something that runs in production is its own discipline, and the part of the job I enjoy most.',
-  origin:
-    'I came to this domain from the author’s side, with 28 peer-reviewed papers written during my degree and reviews for IEEE Access and GLOBECOM. That research was about making machine learning private, explainable and secure. In products built for researchers, those three are the baseline.',
   principles: [
     {
       name: 'The author stays the author.',
@@ -388,20 +384,35 @@ export const path: Stint[] = [
   { role: 'B.Tech, Computer Science and Engineering', where: 'Nirma University · CGPI 9.09 of 10', when: '2021 – 2025', from: 2021 + 7 / 12, to: 2025 + 5 / 12, kind: 'study' },
 ];
 
-// west to east, the order they sit on the globe; id is the ISO 3166 numeric code
+// in the order travelled; id is the ISO 3166 numeric code
 export const travel = {
   countries: [
-    { id: '372', name: 'Ireland', tz: 'Europe/Dublin' },
-    { id: '710', name: 'South Africa', tz: 'Africa/Johannesburg' },
-    { id: '792', name: 'Türkiye', tz: 'Europe/Istanbul' },
     { id: '231', name: 'Ethiopia', tz: 'Africa/Addis_Ababa' },
+    { id: '710', name: 'South Africa', tz: 'Africa/Johannesburg' },
+    { id: '792', name: 'Turkey', tz: 'Europe/Istanbul' },
     { id: '398', name: 'Kazakhstan', tz: 'Asia/Almaty' },
+    { id: '372', name: 'Ireland', tz: 'Europe/Dublin' },
   ],
   continents: 3,
-  visited: 17,
-  // which ones, named as in the DataMeet boundaries; the map hatches these
-  states: [] as string[],
-  stateCount: 28,
+  // named as in the DataMeet boundaries; the map hatches these
+  states: [
+    'Arunachal Pradesh',
+    'Assam',
+    'Delhi',
+    'Gujarat',
+    'Himachal Pradesh',
+    'Jammu & Kashmir',
+    'Kerala',
+    'Maharashtra',
+    'Meghalaya',
+    'Odisha',
+    'Punjab',
+    'Rajasthan',
+    'Sikkim',
+    'Uttar Pradesh',
+    'Uttarakhand',
+    'West Bengal',
+  ],
 };
 
 export const recognition = [

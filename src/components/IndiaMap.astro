@@ -2,13 +2,11 @@
 import { geoConicConformal, geoPath } from 'd3-geo';
 import { indiaStates as regions, thin } from '../lib/atlas';
 import { travel } from '../lib/content';
-import { HOME_AT } from '../lib/globe';
 
-// union territories are drawn but not counted against the 28 states
+// union territories are drawn like the states; only the readout tells them apart
 const UTS = new Set(['Andaman & Nicobar', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu & Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry']);
 const display = (n: string) => n.replace(' & ', ' and ').replace(/^Andaman and Nicobar$/, 'Andaman and Nicobar Islands');
-const key = (n: string) => n.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ').trim();
-const visited = new Set(travel.states.map(key));
+const visited = new Set(travel.states);
 
 const W = 520;
 const fc = { type: 'FeatureCollection' as const, features: regions };
@@ -16,7 +14,6 @@ const proj = geoConicConformal().parallels([12, 28]).rotate([-80, 0]).fitWidth(W
 const [[, y0], [, y1]] = geoPath(proj).bounds(fc);
 const H = Math.ceil(y1 - y0 + 2);
 proj.translate([proj.translate()[0] + 1, proj.translate()[1] - y0 + 1]);
-const [hx, hy] = proj(HOME_AT)!;
 
 // project, then thin each ring to what a screen can show and drop the specks
 const draw = (f: (typeof regions)[number]) => {
@@ -38,31 +35,19 @@ const draw = (f: (typeof regions)[number]) => {
 const shapes = regions
   .map((f) => {
     const name = f.properties.ST_NM;
-    const ut = UTS.has(name);
-    const seen = visited.has(key(name)) || visited.has(key(display(name)));
-    return { d: draw(f), name: display(name), ut, seen };
+    const seen = visited.has(name);
+    return { d: draw(f), id: name, name: display(name), seen, note: `${UTS.has(name) ? 'Union territory' : 'State'}, ${seen ? 'visited' : 'not yet'}` };
   })
   // unvisited first, so a hatched state's outline is never painted over
   .sort((a, b) => Number(a.seen) - Number(b.seen));
-const count = shapes.filter((s) => s.seen && !s.ut).length;
+const seen = shapes.filter((s) => s.seen).map((s) => s.name);
 ---
 
-<svg class="india-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Map of India. ${count} of ${travel.stateCount} states visited${count ? `: ${shapes.filter((s) => s.seen).map((s) => s.name).join(', ')}` : ''}.`}>
+<svg class="india-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Map of India with the ${seen.length} states and union territories visited hatched: ${seen.join(', ')}.`}>
   <defs>
     <pattern id="i-hatch" width="4.5" height="4.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
       <line x1="0" y1="0" x2="0" y2="4.5"></line>
     </pattern>
   </defs>
-  {
-    shapes.map((s) => (
-      <path
-        class:list={['region', s.ut && 'ut', s.seen && 'seen']}
-        d={s.d}
-        data-name={s.name}
-        data-note={s.ut ? (s.seen ? 'Union territory, visited' : 'Union territory') : s.seen ? 'Visited' : 'Not yet'}
-      />
-    ))
-  }
-  <circle class="here-ring" cx={hx.toFixed(1)} cy={hy.toFixed(1)} r="5"></circle>
-  <circle class="here" cx={hx.toFixed(1)} cy={hy.toFixed(1)} r="3.5"></circle>
+  {shapes.map((s) => <path class:list={['region', s.seen && 'seen']} d={s.d} data-id={s.id} data-name={s.name} data-note={s.note} />)}
 </svg>

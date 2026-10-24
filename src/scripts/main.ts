@@ -1,7 +1,7 @@
 import { cmdToString, render, type Cmd, type Frame } from '../lib/axo';
 import { figures, type FigureName } from '../lib/scenes';
-import { initAssembly } from './assembly';
 import { initGlobe } from './globe';
+import { initTrace } from './trace';
 
 const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -29,6 +29,7 @@ const masthead = document.querySelector<HTMLElement>('.masthead');
 const navLinks = [...document.querySelectorAll<HTMLAnchorElement>('.masthead nav a')];
 
 const onScroll = () => masthead?.classList.toggle('is-scrolled', scrollY > 8);
+// the bottom edge of the masthead is the trace of this visit, one span per section (see trace.ts)
 addEventListener('scroll', onScroll, { passive: true });
 onScroll();
 
@@ -94,7 +95,7 @@ const drawIO = new IntersectionObserver(
   { threshold: 0.25 },
 );
 
-document.querySelectorAll<SVGSVGElement>('svg.axo:not(.mini)').forEach((svg) => {
+document.querySelectorAll<SVGSVGElement>('svg.axo').forEach((svg) => {
   const f: Fig = {
     svg,
     name: svg.dataset.scene as FigureName,
@@ -202,7 +203,7 @@ function partAt(svg: SVGSVGElement, x: number, y: number): string | null {
   return null;
 }
 
-document.querySelectorAll<SVGSVGElement>('svg.axo:not(.mini)').forEach((svg) => {
+document.querySelectorAll<SVGSVGElement>('svg.axo').forEach((svg) => {
   let at: [number, number] | null = null;
   let frame = 0;
   let clear = 0;
@@ -474,13 +475,13 @@ if (chart) {
   }
 }
 
-/* ───────── fig. 0: the page, assembling ───────── */
-
-initAssembly(reduced);
-
 /* ───────── fig. 9 and 10: travel ───────── */
 
 initGlobe(reduced);
+
+/* ───────── fig. 11: this visit as a trace ───────── */
+
+initTrace();
 
 /* ───────── reveal ───────── */
 

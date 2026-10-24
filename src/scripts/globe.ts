@@ -1,26 +1,29 @@
-// Fig. 9 and 10 in the browser: the globe turns, follows the legend and the pointer,
-// keeps its night side current, and the legend keeps each place's local time.
+// Fig. 9 and 10 in the browser: the globe turns, follows the legend and the pointer, and
+// keeps its night side current; the legend keeps each place's local time; the map and
+// its list of states point at each other.
 
-import { drawGlobe, HOME_VIEW, SIZE, type Atlas } from '../lib/globe';
+import { drawGlobe, isNight, SIZE, VIEW, type Atlas } from '../lib/globe';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 export function initGlobe(reduced: boolean) {
   const fig = document.querySelector<HTMLElement>('.globe');
-  if (fig) globe(fig, reduced);
+  if (fig) {
+    globe(fig, reduced);
+    clocks(fig);
+  }
   const map = document.querySelector<HTMLElement>('.india');
   if (map) india(map);
-  clocks();
 }
 
 function globe(fig: HTMLElement, reduced: boolean) {
   const svg = fig.querySelector<SVGSVGElement>('.globe-svg')!;
   const body = svg.querySelector<SVGGElement>('.globe-body')!;
-  const chips = [...fig.querySelectorAll<HTMLElement>('.ref[data-id]')];
+  const rows = [...fig.querySelectorAll<HTMLElement>('.places li[data-id]')];
   const scratch = document.createElementNS(SVG_NS, 'g');
 
   let atlas: Atlas | null = null;
-  const rot: [number, number] = [...HOME_VIEW];
+  const rot: [number, number] = [...VIEW];
   let aim: [number, number] | null = null;
   let hot: string | null = null;
   let visible = false;
@@ -75,12 +78,12 @@ function globe(fig: HTMLElement, reduced: boolean) {
       spin[0] *= 0.93;
       spin[1] *= 0.93;
     } else if (idle) {
-      // drift home, then sway slowly about it
+      // drift back to the view of every place, then sway slowly about it
       const sway = reduced ? 0 : Math.sin(((now - t0) / 1000) * 0.12) * 16;
-      let d = HOME_VIEW[0] + sway - rot[0];
+      let d = VIEW[0] + sway - rot[0];
       d = ((d + 540) % 360) - 180;
       rot[0] += d * 0.03;
-      rot[1] += (HOME_VIEW[1] - rot[1]) * 0.03;
+      rot[1] += (VIEW[1] - rot[1]) * 0.03;
     }
     paint();
   };
@@ -118,7 +121,7 @@ function globe(fig: HTMLElement, reduced: boolean) {
   const light = (id: string | null) => {
     if (id === hot) return;
     hot = id;
-    chips.forEach((c) => c.classList.toggle('is-hl', c.dataset.id === id));
+    rows.forEach((r) => r.classList.toggle('is-hl', r.dataset.id === id));
     paint();
   };
 
@@ -162,10 +165,10 @@ function globe(fig: HTMLElement, reduced: boolean) {
   svg.addEventListener('pointercancel', release);
   svg.addEventListener('pointerleave', () => !drag && light(null));
 
-  chips.forEach((chip) => {
+  rows.forEach((row) => {
     const on = () => {
-      light(chip.dataset.id!);
-      aim = centre(chip.dataset.id!);
+      light(row.dataset.id!);
+      aim = centre(row.dataset.id!);
       lastInput = performance.now();
       run();
     };
@@ -174,58 +177,58 @@ function globe(fig: HTMLElement, reduced: boolean) {
       aim = null;
       lastInput = performance.now() - 2500;
     };
-    chip.addEventListener('pointerenter', on);
-    chip.addEventListener('pointerleave', off);
-    chip.addEventListener('click', on);
+    row.addEventListener('pointerenter', on);
+    row.addEventListener('pointerleave', off);
+    row.addEventListener('click', on);
   });
+}
+
+/* local time in each place, and whether the sun is up there */
+
+function clocks(fig: HTMLElement) {
+  const rows = [...fig.querySelectorAll<HTMLElement>('.places li[data-at]')];
+  const set = () => {
+    const d = new Date();
+    rows.forEach((row) => {
+      const time = row.querySelector<HTMLTimeElement>('time.tz')!;
+      time.textContent = new Intl.DateTimeFormat('en-GB', { timeZone: time.dataset.tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d);
+      time.dateTime = d.toISOString();
+      const night = isNight(row.dataset.at!.split(' ').map(Number) as [number, number], d);
+      row.classList.toggle('is-night', night);
+      row.querySelector('.sky')!.setAttribute('title', night ? 'Night there now' : 'Day there now');
+    });
+  };
+  set();
+  setInterval(set, 30_000);
 }
 
 function india(fig: HTMLElement) {
   const svg = fig.querySelector<SVGSVGElement>('.india-svg');
-  const readout = fig.querySelector<HTMLElement>('.matrix-readout');
+  const readout = fig.querySelector<HTMLElement>('.readout');
   if (!svg || !readout) return;
-  const title = readout.querySelector<HTMLElement>('.readout-title')!;
-  const meta = readout.querySelector<HTMLElement>('.readout-meta')!;
+  const name = readout.querySelector('b')!;
+  const note = readout.querySelector('.readout-on > span')!;
+  const items = [...fig.querySelectorAll<HTMLElement>('.states li')];
   let on: SVGPathElement | null = null;
+
   const show = (el: SVGPathElement | null) => {
     if (el === on) return;
     on?.classList.remove('is-on');
     on = el;
     readout.classList.toggle('is-on', !!el);
+    items.forEach((i) => i.classList.toggle('is-hl', !!el && i.dataset.id === el.dataset.id));
     if (!el) return;
     // lift it to the top so its outline reads over its neighbours
-    el.parentNode!.insertBefore(el, svg.querySelector('.here-ring'));
+    svg.append(el);
     el.classList.add('is-on');
-    title.textContent = el.dataset.name ?? '';
-    meta.textContent = el.dataset.note ?? '';
+    name.textContent = el.dataset.name ?? '';
+    note.textContent = el.dataset.note ?? '';
   };
   svg.addEventListener('pointermove', (e) => show((e.target as Element).closest<SVGPathElement>('path.region')));
   svg.addEventListener('pointerleave', () => show(null));
-}
-
-/* local time in every place on the legend, and how far it sits from Mumbai */
-
-function clocks() {
-  const els = [...document.querySelectorAll<HTMLTimeElement>('time.tz[data-tz]')];
-  if (!els.length) return;
-  const minutes = (tz: string, d: Date) => {
-    const p = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' }).formatToParts(d);
-    const v = (t: string) => Number(p.find((x) => x.type === t)?.value);
-    return Date.UTC(v('year'), v('month') - 1, v('day'), v('hour'), v('minute')) / 60000;
-  };
-  const set = () => {
-    const d = new Date();
-    const home = minutes('Asia/Kolkata', d);
-    els.forEach((el) => {
-      const tz = el.dataset.tz!;
-      el.textContent = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d);
-      const diff = minutes(tz, d) - home;
-      const h = Math.floor(Math.abs(diff) / 60);
-      const m = Math.abs(diff) % 60;
-      el.title = `${diff < 0 ? '−' : '+'}${h}:${String(m).padStart(2, '0')} from Mumbai`;
-      el.dateTime = new Date(d.getTime()).toISOString();
-    });
-  };
-  set();
-  setInterval(set, 30_000);
+  items.forEach((item) => {
+    const path = svg.querySelector<SVGPathElement>(`path[data-id="${CSS.escape(item.dataset.id!)}"]`);
+    item.addEventListener('pointerenter', () => show(path));
+    item.addEventListener('pointerleave', () => show(null));
+  });
 }

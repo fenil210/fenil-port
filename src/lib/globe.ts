@@ -1,33 +1,35 @@
 // Fig. 9: an orthographic globe drawn like the other figures. The night side is
-// hatched from where the sun actually is, and arcs lift off the surface from home
-// to each country. Runs at build time (first paint) and in the browser (rotation).
+// hatched from where the sun actually is, and arcs lift off the surface to each country,
+// which carries its number from the legend. Runs at build time (first paint) and in the
+// browser (rotation).
 
-import { geoCircle, geoGraticule10, geoInterpolate, geoOrthographic, geoPath, geoRotation } from 'd3-geo';
-import type { MultiPolygon, Polygon } from 'geojson';
+import { geoCircle, geoGraticule, geoInterpolate, geoOrthographic, geoPath, geoRotation } from 'd3-geo';
+import type { MultiLineString, MultiPolygon } from 'geojson';
 
 export interface Place {
   id: string;
-  shape: Polygon | MultiPolygon;
+  shape: MultiPolygon;
   /** lon, lat the arc lands on */
   at: [number, number];
 }
 
 export interface Atlas {
   land: MultiPolygon;
-  home: Place;
+  india: { fill: MultiPolygon; edge: MultiLineString };
   places: Place[];
 }
 
 export const SIZE = 600;
 const R = 268;
 const C = SIZE / 2;
-/** Mumbai */
-export const HOME_AT: [number, number] = [72.88, 19.08];
-/** the view that shows home and every place at once */
-export const HOME_VIEW: [number, number] = [-50, -22];
+/** the arcs leave from Mumbai */
+const FROM: [number, number] = [72.88, 19.08];
+/** the view that shows every place at once */
+export const VIEW: [number, number] = [-38, -16];
 
 const DEG = Math.PI / 180;
 const r1 = (n: number) => Math.round(n * 10) / 10;
+const grid = geoGraticule().step([15, 15])();
 
 /** where the sun is overhead: lon, lat in degrees */
 export function subsolar(d: Date): [number, number] {
@@ -40,6 +42,13 @@ export function subsolar(d: Date): [number, number] {
   let lon = -15 * (hours - 12 + eot / 60);
   lon = ((lon + 540) % 360) - 180;
   return [lon, decl];
+}
+
+/** whether the sun is down at a place right now */
+export function isNight(at: [number, number], d: Date): boolean {
+  const [slon, slat] = subsolar(d);
+  const [lon, lat] = at;
+  return Math.sin(lat * DEG) * Math.sin(slat * DEG) + Math.cos(lat * DEG) * Math.cos(slat * DEG) * Math.cos((lon - slon) * DEG) < 0;
 }
 
 /** a great circle from a to b, lifted off the surface in the middle, as visible screen runs */
@@ -85,49 +94,38 @@ export function drawGlobe(atlas: Atlas, view: View): string {
     const [lon, lat] = geoRotation(view.rotate)(p);
     return Math.cos(lat * DEG) * Math.cos(lon * DEG) > 0.05;
   };
+  const hot = (id: string) => (view.hot === id ? ' is-hot' : '');
 
   const parts: string[] = [
     `<path class="g-sea" d="${sphere}"/>`,
-    `<path class="g-grat" d="${path(geoGraticule10()) ?? ''}"/>`,
+    `<path class="g-grat" d="${path(grid) ?? ''}"/>`,
     `<path class="g-land" d="${path(atlas.land) ?? ''}"/>`,
-    `<path class="g-home" d="${path(atlas.home.shape) ?? ''}"/>`,
+    `<path class="g-india" d="${path(atlas.india.fill) ?? ''}"/>`,
+    `<path class="g-india-edge" d="${path(atlas.india.edge) ?? ''}"/>`,
   ];
   atlas.places.forEach((p) => {
-    parts.push(`<path class="g-place${view.hot === p.id ? ' is-hot' : ''}" data-id="${p.id}" d="${path(p.shape) ?? ''}"/>`);
+    parts.push(`<path class="g-place${hot(p.id)}" data-id="${p.id}" d="${path(p.shape) ?? ''}"/>`);
   });
   parts.push(`<path class="g-night" d="${path(night) ?? ''}"/>`);
   parts.push(`<path class="g-limb" d="${sphere}"/>`);
 
   atlas.places.forEach((p, i) => {
-    const d = arc(HOME_AT, p.at, view.rotate);
+    const d = arc(FROM, p.at, view.rotate);
     if (!d) return;
-    const hot = view.hot === p.id ? ' is-hot' : '';
-    parts.push(`<path class="g-arc${hot}" pathLength="1" d="${d}"/>`);
+    parts.push(`<path class="g-arc${hot(p.id)}" pathLength="1" d="${d}"/>`);
     parts.push(`<path class="g-comet" pathLength="1" d="${d}" style="animation-delay:${(i * 0.7).toFixed(1)}s"/>`);
   });
 
-  // reference numerals, pushed out from the centre of the globe like leader labels
+  // each place carries its number where its arc lands
   atlas.places.forEach((p, i) => {
     if (!front(p.at)) return;
     const [x, y] = proj(p.at)!;
-    const dx = x - C;
-    const dy = y - C;
-    const len = Math.hypot(dx, dy) || 1;
-    const ux = len > 8 ? dx / len : 0.7;
-    const uy = len > 8 ? dy / len : -0.7;
-    const hot = view.hot === p.id ? ' is-hot' : '';
     parts.push(
-      `<g class="g-ref${hot}" data-id="${p.id}">` +
-        `<circle cx="${r1(x)}" cy="${r1(y)}" r="3.5"/>` +
-        `<path d="M${r1(x + ux * 7)} ${r1(y + uy * 7)}L${r1(x + ux * 22)} ${r1(y + uy * 22)}"/>` +
-        `<text x="${r1(x + ux * 31)}" y="${r1(y + uy * 31)}" text-anchor="middle" dominant-baseline="middle">${i + 1}</text>` +
+      `<g class="g-pin${hot(p.id)}" data-id="${p.id}">` +
+        `<rect x="${r1(x - 9)}" y="${r1(y - 9)}" width="18" height="18" rx="3"/>` +
+        `<text x="${r1(x)}" y="${r1(y + 0.5)}" text-anchor="middle" dominant-baseline="central">${i + 1}</text>` +
         `</g>`,
     );
   });
-
-  if (front(HOME_AT)) {
-    const [x, y] = proj(HOME_AT)!;
-    parts.push(`<circle class="g-here-ring" cx="${r1(x)}" cy="${r1(y)}" r="5"/><circle class="g-here" cx="${r1(x)}" cy="${r1(y)}" r="4"/>`);
-  }
   return parts.join('');
 }

@@ -232,12 +232,43 @@ time,
   background: color-mix(in srgb, var(--paper) 92%, transparent);
   backdrop-filter: saturate(1.4) blur(12px);
   -webkit-backdrop-filter: saturate(1.4) blur(12px);
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.3s;
 }
 
-.masthead.is-scrolled {
-  border-bottom-color: var(--rule);
+/* the bottom edge: one span per section, as wide as the section is tall, filled as it is read */
+.spans {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  display: flex;
+  gap: 2px;
+  height: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.masthead.is-scrolled .spans {
+  opacity: 1;
+}
+
+.spans li {
+  flex: 1 1 0;
+  overflow: hidden;
+  background: var(--rule);
+}
+
+.spans li::after {
+  content: '';
+  display: block;
+  height: 100%;
+  background: var(--ink-2);
+  transform-origin: left;
+  scale: var(--p, 0) 1;
+}
+
+.spans li.is-here::after {
+  background: var(--accent);
 }
 
 .masthead-row {
@@ -752,10 +783,6 @@ html:not(.js) .system {
 }
 
 /* the legend wraps short of the corner board */
-.stage-fig figcaption {
-  max-width: calc(100% - 256px);
-}
-
 .fig-slot:empty {
   display: none;
 }
@@ -895,25 +922,6 @@ html:not(.js) .system {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--s3);
-}
-
-.principles .context {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: subgrid;
-  margin-bottom: var(--s5);
-}
-
-.context p {
-  grid-column: span 6;
-  max-width: 32em;
-  font-size: clamp(19px, 1.45vw, 21px);
-  line-height: 1.55;
-  text-wrap: pretty;
-}
-
-.context p + p {
-  color: var(--ink-2);
 }
 
 .principles ol {
@@ -1205,19 +1213,27 @@ html:not(.js) .system {
   color: var(--muted);
 }
 
+/* each year is labelled just inside the line where it starts */
 .year,
 .now-label {
   position: absolute;
   top: 50%;
-  translate: -50% -50%;
 }
 
-.year { left: calc(var(--x) * 1%); }
+.year {
+  left: calc(var(--x) * 1%);
+  translate: var(--s1) -50%;
+}
+
 .year .short { display: none; }
 
+/* sits on the now line, which breaks around it */
 .now-label {
-  left: calc(var(--now) * 1%);
-  translate: 6px -50%;
+  z-index: 1;
+  left: calc(var(--now) * 1% + 0.5px);
+  translate: -50% -50%;
+  padding: 2px 4px;
+  background: var(--paper);
   color: var(--accent);
 }
 
@@ -1261,8 +1277,7 @@ html:not(.js) .system {
 }
 
 .bar,
-.riser,
-.ahead {
+.riser {
   position: absolute;
   left: calc(var(--a) * 1%);
 }
@@ -1286,43 +1301,31 @@ html:not(.js) .system {
   background: var(--accent);
 }
 
-/* the live end of the current bar */
-.current .bar::after {
+/* the live end of the current bar, centred on the now line */
+.live {
+  position: absolute;
+  top: var(--y);
+  left: calc(var(--now) * 1% + 0.5px);
+  width: 13px;
+  height: 13px;
+  translate: -50% -50%;
+  border: 2px solid var(--paper);
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.live::after {
   content: '';
   position: absolute;
-  top: 50%;
-  right: 0;
-  width: 9px;
-  height: 9px;
-  translate: 50% -50%;
-  border: 1.5px solid var(--accent);
+  inset: 0;
+  border: 1px solid var(--accent);
   border-radius: 50%;
-  background: var(--paper);
   animation: live 2.4s var(--ease) infinite;
 }
 
 @keyframes live {
-  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 40%, transparent); }
-  70%, 100% { box-shadow: 0 0 0 9px transparent; }
-}
-
-.ahead {
-  --a: var(--now);
-  top: var(--y);
-  right: 12px;
-  border-top: 1px dashed var(--accent);
-}
-
-.ahead::after {
-  content: '';
-  position: absolute;
-  top: -4px;
-  right: -1px;
-  width: 7px;
-  height: 7px;
-  border: solid var(--accent);
-  border-width: 1px 1px 0 0;
-  rotate: 45deg;
+  from { scale: 1; opacity: 0.8; }
+  70%, to { scale: 2.6; opacity: 0; }
 }
 
 /* from the end of the job below to the start of this one */
@@ -1361,13 +1364,13 @@ html:not(.js) .system {
 .js .chart.pre .bar { transform: scaleX(0); }
 .js .chart.pre .riser { clip-path: inset(100% 100% 0 0); }
 .js .chart.pre .tick { scale: 1 0; }
-.js .chart.pre .ahead { clip-path: inset(-6px 100% -6px 0); }
+.js .chart.pre .live { opacity: 0; }
 .js .chart.pre .stint-label { opacity: 0; translate: 0 var(--s1); }
 
 .chart.drawing .bar { transition: transform 0.7s var(--ease) calc(var(--i) * 160ms); }
 .chart.drawing .riser { transition: clip-path 0.45s var(--ease) calc(var(--i) * 160ms - 60ms); }
 .chart.drawing .tick { transition: scale 0.4s var(--ease) calc(var(--i) * 160ms + var(--x) * 6ms); }
-.chart.drawing .ahead { transition: clip-path 0.9s var(--ease) calc(var(--i) * 160ms + 600ms); }
+.chart.drawing .live { transition: opacity 0.4s var(--ease) calc(var(--i) * 160ms + 650ms); }
 .chart.drawing .stint-label { transition: opacity 0.6s var(--ease) calc(var(--i) * 160ms), translate 0.6s var(--ease) calc(var(--i) * 160ms); }
 
 .recognition {
@@ -1443,9 +1446,9 @@ html:not(.js) .system {
 }
 
 .colophon {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--s3);
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--s3);
   padding-block: var(--s4);
   color: var(--ink-2);
   border-top: 1px solid var(--rule);
@@ -1455,19 +1458,134 @@ html:not(.js) .system {
   padding-inline: 0;
 }
 
-/* ───────── travel: fig. 9 globe, fig. 10 india ───────── */
-
-.stats .of {
-  color: var(--muted);
-  font-size: 0.42em;
-  letter-spacing: 0;
+.colophon-copy {
+  grid-column: 1 / span 4;
 }
+
+.colophon-credits {
+  grid-column: 5 / -1;
+  max-width: 64em;
+  text-wrap: pretty;
+}
+
+/* fig. 11: this visit, laid out like the experience chart, with time in place of years */
+
+.trace {
+  display: none;
+}
+
+.js .trace {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  row-gap: 0;
+  margin-bottom: var(--s5);
+}
+
+.trace-axis {
+  position: relative;
+  grid-column: 5 / -1;
+  height: var(--s4);
+  border-bottom: 1px solid var(--rule);
+  color: var(--muted);
+  font: 12px/1 var(--mono);
+}
+
+.trace-axis span {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--x) * 1%);
+  translate: var(--s1) -50%;
+  white-space: nowrap;
+}
+
+.trace-rows {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  border-bottom: 1px solid var(--rule);
+}
+
+.span {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: center;
+  min-height: 32px;
+  color: var(--muted);
+  transition: color 0.3s;
+}
+
+.span.root,
+.span.is-read {
+  color: var(--ink);
+}
+
+.span-name {
+  grid-column: 1 / span 3;
+}
+
+.span-dur {
+  grid-column: 4;
+  justify-self: end;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  position: relative;
+  grid-column: 5 / -1;
+  align-self: stretch;
+  background: linear-gradient(to right, var(--rule) 1px, transparent 1px) 0 0 / calc(var(--step, 100) * 1%) 100%;
+  box-shadow: inset -1px 0 var(--rule);
+}
+
+.seg {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--a) * 1%);
+  width: max(2px, calc((var(--b) - var(--a)) * 1%));
+  height: 10px;
+  translate: 0 -50%;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  transition: left 1s linear, width 1s linear;
+}
+
+.seg.is-live {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.root .seg {
+  height: 4px;
+  border: 0;
+  background: var(--ink-2);
+}
+
+.trace figcaption {
+  grid-column: 1 / -1;
+  margin-top: var(--s2);
+}
+
+/* ───────── travel: fig. 9 globe, fig. 10 india ───────── */
 
 .atlas {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--s3);
-  align-items: start;
+}
+
+/* the two figures share two rows: the drawings stand on one line, the captions start on the next */
+.atlas .fig {
+  grid-row: span 2;
+  display: grid;
+  grid-template-rows: subgrid;
+  row-gap: var(--s3);
+}
+
+.atlas .fig > :first-child {
+  align-self: end;
 }
 
 .globe {
@@ -1504,8 +1622,10 @@ html:not(.js) .system {
 
 .g-sea { fill: var(--paper); }
 .g-grat { fill: none; stroke: var(--rule); stroke-width: 0.8; vector-effect: non-scaling-stroke; }
-.g-land { fill: var(--paper); stroke: var(--ink); stroke-width: 0.9; vector-effect: non-scaling-stroke; }
-.g-home { fill: var(--tint); stroke: var(--accent); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.g-land { fill: var(--paper); stroke: var(--ink); stroke-width: 0.8; vector-effect: non-scaling-stroke; }
+/* the states, painted together; a stroke of the same colour closes the seams between them */
+.g-india { fill: var(--tint); stroke: var(--tint); stroke-width: 0.8; vector-effect: non-scaling-stroke; pointer-events: none; }
+.g-india-edge { fill: none; stroke: var(--accent); stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
 .g-place { fill: var(--tint); stroke: var(--accent); stroke-width: 1.1; vector-effect: non-scaling-stroke; transition: fill 0.25s; }
 .g-place.is-hot { fill: var(--accent); }
 .g-night { fill: url(#g-hatch); pointer-events: none; }
@@ -1541,44 +1661,90 @@ html:not(.js) .system {
   animation: comet 4.2s cubic-bezier(0.5, 0, 0.3, 1) infinite;
 }
 
-.g-ref circle { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; }
-.g-ref path { fill: none; stroke: var(--ink); stroke-width: 0.8; }
-.g-ref text { fill: var(--ink); font: 500 15px var(--mono); }
-.g-ref.is-hot text { fill: var(--accent); }
-.g-ref.is-hot circle { fill: var(--accent); }
-.g-here { fill: var(--accent); }
-.g-here-ring,
-.india .here-ring {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 1.2;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: ring 2.6s var(--ease) infinite;
-}
+/* pins hold their size on screen as the globe shrinks */
+.g-pin { transform-box: fill-box; transform-origin: center; scale: var(--pin, 1); }
+.g-pin rect { fill: var(--paper); stroke: var(--accent); stroke-width: 1.2; transition: stroke-width 0.2s; }
+.g-pin text { fill: var(--accent); font: 500 11px var(--mono); pointer-events: none; }
+.g-pin.is-hot rect { stroke-width: 2.2; }
 
-@keyframes ring {
-  0% { opacity: 0.9; scale: 1; }
-  80%, 100% { opacity: 0; scale: 3.2; }
-}
+/* captions: the figure number, then a list, then its key */
 
-.globe .legend {
+.atlas figcaption {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
   column-gap: var(--s3);
+  max-width: none;
+}
+
+.places ol,
+.states {
+  border-block: 1px solid var(--rule);
+}
+
+.places ol li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: var(--s2);
+  padding-block: 6px;
+  cursor: default;
+}
+
+.places ol li + li {
+  border-top: 1px solid var(--rule);
+}
+
+.places .ref {
+  min-width: 24px;
+  margin: 0;
+  padding: 4px 0 3px;
+  font-size: 11px;
+  vertical-align: 0;
+}
+
+.places li.is-hl .ref {
+  border-color: var(--accent);
+  background: var(--tint);
+  color: var(--accent);
+}
+
+.place {
+  color: var(--ink);
+  transition: color 0.2s;
+}
+
+.places li.is-hl .place {
+  color: var(--accent);
 }
 
 .tz {
-  margin-left: 2px;
-  color: var(--muted);
+  color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
 
-.night-key {
-  color: var(--muted);
+.sky {
+  margin: 0;
+  border-color: var(--ink-2);
 }
 
+.is-night .sky,
 .key-night {
   border-color: var(--ink-2);
   background: repeating-linear-gradient(-45deg, var(--ink-2) 0 1px, transparent 1px 4px);
+}
+
+.keys {
+  margin-top: var(--s2);
+  color: var(--muted);
+}
+
+.keys .key {
+  margin-left: 0;
+}
+
+.keys .key:not(:first-child) {
+  margin-left: var(--s2);
 }
 
 .key-hatch {
@@ -1586,14 +1752,46 @@ html:not(.js) .system {
   background: repeating-linear-gradient(-45deg, var(--accent) 0 1px, transparent 1px 3.5px);
 }
 
-.key-home {
-  width: 8px;
-  height: 8px;
-  margin-left: var(--s2);
-  border: 0;
-  border-radius: 50%;
-  background: var(--accent);
-  vertical-align: 0;
+.states {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--s3);
+  padding-block: 6px;
+}
+
+.states li {
+  padding-block: 2px;
+  color: var(--ink);
+  cursor: default;
+  transition: color 0.2s;
+}
+
+.states li.is-hl {
+  color: var(--accent);
+}
+
+/* the key gives way to the region under the pointer */
+.readout {
+  display: grid;
+}
+
+.readout > * {
+  grid-area: 1 / 1;
+  transition: opacity 0.2s;
+}
+
+.readout-on,
+.readout.is-on .readout-default {
+  opacity: 0;
+}
+
+.readout.is-on .readout-on {
+  opacity: 1;
+}
+
+.readout b {
+  color: var(--ink);
+  font-weight: 500;
 }
 
 .india .region {
@@ -1602,11 +1800,6 @@ html:not(.js) .system {
   stroke-width: 0.7;
   stroke-linejoin: round;
   transition: fill 0.2s, stroke 0.2s;
-}
-
-.india .region.ut {
-  stroke: var(--muted);
-  stroke-dasharray: 2 2;
 }
 
 .india .region.seen {
@@ -1619,7 +1812,6 @@ html:not(.js) .system {
   fill: var(--tint);
   stroke: var(--accent);
   stroke-width: 1.4;
-  stroke-dasharray: none;
 }
 
 .india .region.seen.is-on {
@@ -1629,174 +1821,6 @@ html:not(.js) .system {
 #i-hatch line {
   stroke: var(--accent);
   stroke-width: 1;
-}
-
-.india .here { fill: var(--accent); }
-
-.india figcaption .matrix-readout {
-  min-height: calc(13px * 1.5 * 3);
-}
-
-/* ───────── fig. 0: the corner board ───────── */
-
-.assembly {
-  display: none;
-}
-
-.js .assembly {
-  position: fixed;
-  right: var(--s3);
-  bottom: var(--s3);
-  z-index: 30;
-  display: block;
-  width: 256px;
-  padding: var(--s2) var(--s2) 12px;
-  border: 1px solid var(--rule);
-  background: var(--paper);
-  visibility: hidden;
-  opacity: 0;
-  translate: 0 var(--s2);
-  transition: opacity 0.5s var(--ease), translate 0.5s var(--ease), visibility 0s 0.5s;
-}
-
-.js .assembly.is-on {
-  visibility: visible;
-  opacity: 1;
-  translate: none;
-  transition: opacity 0.5s var(--ease), translate 0.5s var(--ease);
-}
-
-.asm-board {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
-
-.axo.mini {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-
-.asm-status {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s1);
-  margin-top: var(--s1);
-  font: 12px/1.5 var(--mono);
-}
-
-.asm-status .fig-no {
-  font-size: 12px;
-}
-
-.asm-line {
-  position: relative;
-  margin-left: auto;
-  color: var(--ink-2);
-  white-space: nowrap;
-}
-
-.asm-line > * {
-  transition: opacity 0.35s var(--ease), translate 0.35s var(--ease);
-}
-
-.asm-note,
-.asm-done {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-}
-
-.asm-count b {
-  color: var(--accent);
-  font-weight: 500;
-}
-
-.asm-note,
-.asm-done {
-  visibility: hidden;
-  opacity: 0;
-  translate: 0 4px;
-  color: var(--accent);
-}
-
-.assembly.has-note .asm-note,
-.assembly.is-done:not(.has-note) .asm-done {
-  visibility: visible;
-  opacity: 1;
-  translate: none;
-}
-
-.assembly.has-note .asm-count,
-.assembly.is-done .asm-count {
-  opacity: 0;
-}
-
-.asm-done a {
-  color: inherit;
-  text-underline-offset: 0.2em;
-}
-
-/* the list of parts opens above the board */
-.asm-panel {
-  position: absolute;
-  right: -1px;
-  bottom: calc(100% - 1px);
-  left: -1px;
-  padding: 12px var(--s2) var(--s1);
-  border: 1px solid var(--rule);
-  border-bottom: 0;
-  background: var(--paper);
-  visibility: hidden;
-  opacity: 0;
-  translate: 0 var(--s1);
-  transition: opacity 0.3s var(--ease), translate 0.3s var(--ease), visibility 0s 0.3s;
-}
-
-.assembly.is-open .asm-panel,
-.assembly:focus-within .asm-panel {
-  visibility: visible;
-  opacity: 1;
-  translate: none;
-  transition: opacity 0.3s var(--ease), translate 0.3s var(--ease);
-}
-
-@media (hover: hover) {
-  .assembly:hover .asm-panel {
-    visibility: visible;
-    opacity: 1;
-    translate: none;
-    transition: opacity 0.3s var(--ease), translate 0.3s var(--ease);
-  }
-}
-
-.asm-list a {
-  display: flex;
-  align-items: baseline;
-  gap: var(--s1);
-  padding-block: 3px;
-  color: var(--muted);
-  font: 13px/1.4 var(--mono);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.asm-list a.is-seated {
-  color: var(--ink);
-}
-
-.asm-list a.is-here {
-  color: var(--accent);
-}
-
-.asm-list .ref {
-  min-width: 2.2em;
 }
 
 /* ───────── reveal ───────── */
@@ -1995,40 +2019,49 @@ html:not(.js) .system {
     gap: var(--s5);
   }
 
-  .stats .of {
-    font-size: 0.5em;
+  .atlas figcaption {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--s2);
   }
 
-  .js .assembly {
-    right: var(--s2);
-    bottom: var(--s2);
-    width: 156px;
-    padding: 12px 12px var(--s1);
+  .globe-svg {
+    --pin: 1.6;
   }
 
-  .asm-status {
-    margin-top: 4px;
-    font-size: 11px;
-  }
-
-  .asm-status .fig-no,
-  .asm-word {
-    display: none;
-  }
-
-  .asm-panel {
-    bottom: calc(100% + var(--s1));
-    left: auto;
-    width: 200px;
-    padding-inline: 12px;
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .principles .context {
+  .colophon {
     display: flex;
     flex-direction: column;
-    gap: var(--s3);
+    gap: var(--s2);
+  }
+
+  .js .trace {
+    display: flex;
+    flex-direction: column;
     margin-bottom: var(--s4);
+  }
+
+  .trace-axis {
+    height: var(--s3);
+  }
+
+  .trace-rows {
+    display: block;
+  }
+
+  .span {
+    grid-template-columns: 1fr auto;
+    row-gap: 4px;
+    padding-block: var(--s1);
+  }
+
+  .span-name,
+  .span-dur {
+    grid-column: auto;
+  }
+
+  .track {
+    grid-column: 1 / -1;
+    height: 14px;
   }
 
   .principles ol {

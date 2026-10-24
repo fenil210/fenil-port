@@ -9,8 +9,7 @@ import Arrow from '../components/Arrow.astro';
 import Figure from '../components/Figure.astro';
 import IndiaMap from '../components/IndiaMap.astro';
 import { atlas } from '../lib/atlas';
-import { drawGlobe, HOME_VIEW, SIZE } from '../lib/globe';
-import type { Glyph } from '../lib/scenes';
+import { drawGlobe, SIZE, VIEW } from '../lib/globe';
 import { domain, hero, links, papers, path, projects, recognition, research, systems, themes, travel, writing, years } from '../lib/content';
 
 const fmt = (iso: string) =>
@@ -35,22 +34,23 @@ const prev = (i: number) => (path[i].kind === 'job' && path[i + 1]?.kind === 'jo
 const title = 'Fenil Ramoliya · Software Engineer, AI';
 const description =
   'Fenil Ramoliya builds AI agents and the systems they run on: harnesses and runtimes, tools and protocols, and the infrastructure that keeps them fast, affordable and correct under real traffic.';
-// one module on the corner board per section, in reading order
-const parts: { id: string; name: string; glyph: Glyph }[] = [
-  { id: 'work', name: 'Systems', glyph: 'agents' },
-  { id: 'domain', name: 'Principles', glyph: 'book' },
-  { id: 'research', name: 'Research', glyph: 'papers' },
-  { id: 'projects', name: 'Projects', glyph: 'tools' },
-  { id: 'notes', name: 'Notes', glyph: 'notes' },
-  { id: 'experience', name: 'Experience', glyph: 'steps' },
-  { id: 'travel', name: 'Travel', glyph: 'globe' },
-  { id: 'contact', name: 'Contact', glyph: 'letter' },
+// a visit is traced through these, in page order: Fig. 11 and the masthead's bottom edge
+const spans = [
+  { id: 'top', name: 'Introduction' },
+  { id: 'work', name: 'Systems' },
+  { id: 'domain', name: 'Principles' },
+  { id: 'research', name: 'Research' },
+  { id: 'projects', name: 'Projects' },
+  { id: 'articles', name: 'Articles' },
+  { id: 'experience', name: 'Experience' },
+  { id: 'travel', name: 'Travel' },
+  { id: 'contact', name: 'Contact' },
 ];
 const nav = [
   { id: 'work', name: 'Work' },
   { id: 'research', name: 'Research' },
   { id: 'projects', name: 'Projects' },
-  { id: 'notes', name: 'Notes' },
+  { id: 'articles', name: 'Articles' },
   { id: 'experience', name: 'Experience' },
   { id: 'travel', name: 'Travel' },
 ];
@@ -99,6 +99,7 @@ const nav = [
           <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25" /><path d="M10 2.75a7.25 7.25 0 0 1 0 14.5z" /></svg>
         </button>
       </div>
+      <ol class="spans" aria-hidden="true">{spans.map((s) => <li data-id={s.id} />)}</ol>
     </header>
 
     <main id="main">
@@ -147,10 +148,6 @@ const nav = [
       <section class="section wrap" id="domain">
         <h2 class="section-head">Building for research</h2>
         <div class="principles">
-          <div class="context">
-            <p>{domain.work}</p>
-            <p>{domain.origin}</p>
-          </div>
           <ol>
             {
               domain.principles.map((d) => (
@@ -258,8 +255,8 @@ const nav = [
         <p class="more"><a href={links.github}>All repositories on GitHub</a></p>
       </section>
 
-      <section class="section wrap" id="notes">
-        <h2 class="section-head">Notes from the work</h2>
+      <section class="section wrap" id="articles">
+        <h2 class="section-head">Articles</h2>
         <ol class="rows notes">
           {
             writing.map((w) => (
@@ -281,7 +278,7 @@ const nav = [
           <div class="chart-axis lane" aria-hidden="true">
             {
               scale.map((y) => (
-                <span class="year" style={`--x:${at(y + 0.5)}`}>
+                <span class="year" style={`--x:${at(y)}`}>
                   <span class="long">{y}</span>
                   <span class="short">’{String(y).slice(2)}</span>
                 </span>
@@ -305,7 +302,7 @@ const nav = [
                       <span class="bar" style={`--a:${at(p.from)};--b:${p.to === undefined ? 'var(--now)' : at(p.to)}`} />
                     )}
                     {prev(i) && <span class="riser" style={`--a:${at(prev(i)!.to!)};--b:${at(p.from)}`} />}
-                    {p.to === undefined && <span class="ahead" />}
+                    {p.to === undefined && <span class="live" />}
                   </div>
                 </li>
               ))
@@ -333,35 +330,38 @@ const nav = [
         <dl class="stats">
           <div><dt>{travel.countries.length}</dt><dd>countries abroad</dd></div>
           <div><dt>{travel.continents}</dt><dd>continents</dd></div>
-          <div><dt>{travel.visited}<span class="of"> of {travel.stateCount}</span></dt><dd>states of India</dd></div>
+          <div><dt>{travel.states.length}</dt><dd>states and union territories of India</dd></div>
         </dl>
 
         <div class="atlas">
           <figure class="fig globe" id="fig-9">
             <div class="globe-frame">
-              <svg class="globe-svg" viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label={`Globe with the night side shaded as it is now, and arcs from Mumbai to ${travel.countries.map((c) => c.name).join(', ')}.`}>
+              <svg class="globe-svg" viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label={`Globe with arcs to ${travel.countries.map((c) => c.name).join(', ')}, and the night side shaded as it is now.`}>
                 <defs>
                   <pattern id="g-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
                     <line x1="0" y1="0" x2="0" y2="5"></line>
                   </pattern>
                 </defs>
-                <g class="globe-body" set:html={drawGlobe(atlas, { rotate: HOME_VIEW, now: new Date() })} />
+                <g class="globe-body" set:html={drawGlobe(atlas, { rotate: VIEW, now: new Date() })} />
               </svg>
             </div>
             <figcaption>
               <span class="fig-no">Fig. 9</span>
-              <ol class="legend">
-                {
-                  travel.countries.map((c, i) => (
-                    <li>
-                      <span class="ref" data-id={c.id}>{i + 1}</span>
-                      {c.name}
-                      <time class="tz" data-tz={c.tz} />
-                    </li>
-                  ))
-                }
-                <li class="night-key"><span class="key key-night"></span>Night, now</li>
-              </ol>
+              <div class="places">
+                <ol>
+                  {
+                    travel.countries.map((c, i) => (
+                      <li data-id={c.id} data-at={atlas.places[i].at.join(' ')}>
+                        <span class="ref">{i + 1}</span>
+                        <span class="place">{c.name}</span>
+                        <time class="tz" data-tz={c.tz} />
+                        <span class="key sky" />
+                      </li>
+                    ))
+                  }
+                </ol>
+                <p class="keys"><span class="key key-night"></span>Night there now <span class="key"></span>Day</p>
+              </div>
             </figcaption>
           </figure>
 
@@ -369,11 +369,13 @@ const nav = [
             <IndiaMap />
             <figcaption>
               <span class="fig-no">Fig. 10</span>
-              <span class="matrix-readout" aria-live="polite">
-                <span class="readout-default"><span class="key key-hatch"></span> Visited <span class="key key-home"></span> Home, Mumbai</span>
-                <span class="readout-title"></span>
-                <span class="readout-meta"></span>
-              </span>
+              <div class="places">
+                <ul class="states">{travel.states.map((s) => <li data-id={s}>{s.replace(' & ', ' and ')}</li>)}</ul>
+                <p class="keys readout" aria-live="polite">
+                  <span class="readout-default"><span class="key key-hatch"></span>Visited</span>
+                  <span class="readout-on"><b></b> <span></span></span>
+                </p>
+              </div>
             </figcaption>
           </figure>
         </div>
@@ -396,37 +398,36 @@ const nav = [
       </section>
     </main>
 
-    <aside class="assembly" aria-label="Reading progress" data-glyphs={parts.map((p) => p.glyph).join(' ')}>
-      <div class="asm-panel" id="asm-parts">
-        <ol class="asm-list">
+    <footer class="wrap colophon">
+      <figure class="fig trace" id="fig-11">
+        <div class="trace-axis" aria-hidden="true"></div>
+        <ol class="trace-rows">
+          <li class="span root">
+            <span class="span-name">Visit</span>
+            <span class="span-dur"></span>
+            <span class="track" aria-hidden="true"><span class="seg" style="--a:0;--b:100"></span></span>
+          </li>
           {
-            parts.map((p, i) => (
-              <li>
-                <a href={`#${p.id}`} data-i={i}>
-                  <span class="ref">{i + 1}</span>
-                  {p.name}
-                </a>
+            spans.map((s) => (
+              <li class="span" data-id={s.id}>
+                <span class="span-name">{s.name}</span>
+                <span class="span-dur"></span>
+                <span class="track" aria-hidden="true" />
               </li>
             ))
           }
         </ol>
-      </div>
-      <button class="asm-board" type="button" aria-expanded="false" aria-controls="asm-parts" aria-label="Sections of this page">
-        <svg class="axo mini" aria-hidden="true"></svg>
-      </button>
-      <p class="asm-status">
-        <span class="fig-no">Fig. 0</span>
-        <span class="asm-line">
-          <span class="asm-count"><b>0</b> of {parts.length}</span>
-          <span class="asm-note" aria-live="polite"></span>
-          <span class="asm-done"><span class="asm-word">Assembled. </span><a href={`mailto:${links.email}`}>Write to me</a></span>
-        </span>
+        <figcaption>
+          <span class="fig-no">Fig. 11</span>
+          <span>This visit as a trace. Each section is a span, timed while it is on screen. Nothing leaves this page.</span>
+        </figcaption>
+      </figure>
+      <p class="colophon-copy">© 2026 Fenil Ramoliya</p>
+      <p class="colophon-credits">
+        Set in Newsreader and IBM Plex Mono. Figures are drawn by a small axonometric renderer written for this site, maps with
+        d3-geo from <a href="https://www.naturalearthdata.com">Natural Earth</a> and <a href="https://github.com/datameet/maps">DataMeet</a>{' '}
+        data (CC BY 4.0). Built with Astro and Bun.
       </p>
-    </aside>
-
-    <footer class="wrap colophon">
-      <p>© 2026 Fenil Ramoliya</p>
-      <p>Maps from <a href="https://www.naturalearthdata.com">Natural Earth</a> and <a href="https://github.com/datameet/maps">DataMeet</a>, CC BY 4.0</p>
     </footer>
 
     <script>
