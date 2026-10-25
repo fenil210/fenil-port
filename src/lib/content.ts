@@ -307,7 +307,7 @@ export const path: Stint[] = [
 
 // in the order travelled; id is the ISO 3166 numeric code
 export const travel = {
-  dek: 'A travel geek away from work: always planning the next trip, and wandering off the plan once I get there.',
+  dek: 'Travel geek. Most of my photos are of the places I’ve been, and very few are of me.',
   countries: [
     { id: '231', name: 'Ethiopia', tz: 'Africa/Addis_Ababa' },
     { id: '710', name: 'South Africa', tz: 'Africa/Johannesburg' },
