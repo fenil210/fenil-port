@@ -242,13 +242,14 @@ export function cmdToString(c: Cmd, i: number): string {
   const k = ` data-k="${c.k}"`;
   if (c.el === 'circle') return `<circle${k} class="${c.cls}" cx="${c.cx}" cy="${c.cy}" r="${c.r}"${tag}/>`;
   if (c.el === 'text')
-    return `<text${k} class="${c.cls}" x="${c.x}" y="${c.y}" text-anchor="${c.anchor}" dominant-baseline="middle"${tag}>${esc(c.text ?? '')}</text>`;
+    return `<text${k} class="${c.cls}" x="${c.x}" y="${c.y}" text-anchor="${c.anchor}" dominant-baseline="middle" aria-hidden="true"${tag}>${esc(c.text ?? '')}</text>`;
   const style = c.comet !== undefined ? ` style="animation-delay:${c.comet}s"` : c.draw ? ` style="--i:${i}"` : '';
   const len = c.draw || c.comet !== undefined ? ' pathLength="1"' : '';
   return `<path${k} class="${c.cls}" d="${c.d}"${len}${tag}${style}/>`;
 }
 
-export const frameToString = (f: Frame) => f.cmds.map(cmdToString).join('');
+// a line break between elements draws nothing, but keeps the numerals apart for readers of raw HTML
+export const frameToString = (f: Frame) => f.cmds.map(cmdToString).join('\n');
 
 /* ───────────────────────── primitives ───────────────────────── */
 

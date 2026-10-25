@@ -6,23 +6,28 @@ import type { Legend } from '../lib/content';
 interface Props {
   name: FigureName;
   no: string;
+  // what the figure shows, read out in place of the drawing
+  title: string;
   legend: Legend;
   live?: boolean;
   class?: string;
   id?: string;
 }
 
-const { name, no, legend, live = false, class: cls, id } = Astro.props;
+const { name, no, title, legend, live = false, class: cls, id } = Astro.props;
 const def = figures[name];
 const frame = render(def.build(def.cam), def.cam);
 const [x, y, w, h] = frame.box;
 // stroke and type are scaled against this width until the client measures the real one
 const k = (w / 560).toFixed(4);
-const plain = `Figure ${no}: ${legend.map(([n, part]) => `${part} (${n})`).join(', ')}`;
+// one line, without the reference numerals, which only mean something to the eye
+const lower = (s: string) => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
+const parts = legend.map(([, part]) => lower(part));
+const plain = `Figure ${no}, ${lower(title)}: ${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}.`;
 ---
 
 <figure class:list={['fig', cls]} data-fig={name} id={id}>
-  <div class="fig-frame">
+  <div class="fig-frame" data-nosnippet>
     <svg
       class="axo"
       viewBox={`${x} ${y} ${w} ${h}`}
@@ -36,12 +41,13 @@ const plain = `Figure ${no}: ${legend.map(([n, part]) => `${part} (${n})`).join(
     />
   </div>
   <figcaption>
-    <span class="fig-no">Fig. {no}</span>
+    {/* the spaces render nothing in these flex rows, but keep numbers and names apart in raw HTML */}
+    <span class="fig-no" aria-hidden="true">Fig. {no}</span>{' '}
     <ol class="legend">
       {
         legend.map(([n, part]) => (
           <li>
-            <span class="ref" data-ref={n}>{n}</span>
+            <span class="ref" data-ref={n} aria-hidden="true">{n}</span>{' '}
             {part}
           </li>
         ))

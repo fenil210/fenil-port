@@ -133,7 +133,7 @@ const nav = [
             <li><a href={links.x} rel="me">X</a></li>
           </ul>
         </div>
-        <Figure name="hero" no="1" legend={hero.legend} live class="hero-fig" />
+        <Figure name="hero" no="1" title="an agent system" legend={hero.legend} live class="hero-fig" />
       </section>
 
       <section class="section wrap" id="work">
@@ -157,7 +157,7 @@ const nav = [
           </div>
           <div class="systems-stage" aria-live="off">
             <div class="stage-inner">
-              {systems.map((s, i) => <Figure name={s.fig} no={s.figNo} legend={s.legend} class:list={['stage-fig', i === 0 && 'on']} />)}
+              {systems.map((s, i) => <Figure name={s.fig} no={s.figNo} title={s.name} legend={s.legend} class:list={['stage-fig', i === 0 && 'on']} />)}
             </div>
           </div>
         </div>
@@ -191,15 +191,16 @@ const nav = [
           }
         </dl>
 
-        <figure class="fig matrix" id="fig-7">
+        <figure class="fig matrix" id="fig-7" aria-label={`Figure 7, all ${papers.length} papers by theme and year`}>
           <div class="matrix-grid" role="group" aria-label="All 28 papers by theme and year">
             <span class="matrix-corner" aria-hidden="true"></span>
-            {years.map((y) => <span class="matrix-year" aria-hidden="true">{y}</span>)}
+            {/* the spaces render nothing in the grid, but keep the years apart for readers of raw HTML */}
+            {years.map((y) => <>{' '}<span class="matrix-year" aria-hidden="true">{y}</span></>)}
             {
               themes.map((th) => (
                 <>
                   <span class="matrix-theme">
-                    {th.name}
+                    {th.name}{' '}
                     <span class="matrix-count">{papers.filter((p) => p.th === th.id).length}</span>
                   </span>
                   {years.map((y) => (
@@ -223,7 +224,7 @@ const nav = [
             }
           </div>
           <figcaption>
-            <span class="fig-no">Fig. 7</span>
+            <span class="fig-no" aria-hidden="true">Fig. 7</span>{' '}
             <span class="matrix-readout" aria-live="polite">
               <span class="readout-default"><span class="key key-j"></span> Journal article <span class="key"></span> Conference paper</span>
               <span class="readout-title"></span>
@@ -352,7 +353,7 @@ const nav = [
 
         <div class="atlas">
           <figure class="fig globe" id="fig-9">
-            <div class="globe-frame">
+            <div class="globe-frame" data-nosnippet>
               <svg class="globe-svg" viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label={`Globe with arcs to ${travel.countries.map((c) => c.name).join(', ')}, and the night side shaded as it is now.`}>
                 <defs>
                   <pattern id="g-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -363,13 +364,13 @@ const nav = [
               </svg>
             </div>
             <figcaption>
-              <span class="fig-no">Fig. 9</span>
+              <span class="fig-no" aria-hidden="true">Fig. 9</span>{' '}
               <div class="places">
                 <ol>
                   {
                     travel.countries.map((c, i) => (
                       <li data-id={c.id} data-at={atlas.places[i].at.join(' ')}>
-                        <span class="ref">{i + 1}</span>
+                        <span class="ref" aria-hidden="true">{i + 1}</span>{' '}
                         <span class="place">{c.name}</span>
                         <time class="tz" data-tz={c.tz} />
                         <span class="key sky" />
@@ -385,7 +386,7 @@ const nav = [
           <figure class="fig india" id="fig-10">
             <IndiaMap />
             <figcaption>
-              <span class="fig-no">Fig. 10</span>
+              <span class="fig-no" aria-hidden="true">Fig. 10</span>{' '}
               <div class="places">
                 <ul class="states">{travel.states.map((s) => <li data-id={s}>{s.replace(' & ', ' and ')}</li>)}</ul>
                 <p class="keys readout" aria-live="polite">
@@ -435,7 +436,7 @@ const nav = [
           }
         </ol>
         <figcaption>
-          <span class="fig-no">Fig. 11</span>
+          <span class="fig-no" aria-hidden="true">Fig. 11</span>{' '}
           <span>This visit as a trace. Each section is a span, timed while it is on screen. Nothing leaves this page.</span>
         </figcaption>
       </figure>

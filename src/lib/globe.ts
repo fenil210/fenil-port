@@ -121,7 +121,7 @@ export function drawGlobe(atlas: Atlas, view: View): string {
     if (!front(p.at)) return;
     const [x, y] = proj(p.at)!;
     parts.push(
-      `<g class="g-pin${hot(p.id)}" data-id="${p.id}">` +
+      `<g class="g-pin${hot(p.id)}" data-id="${p.id}" aria-hidden="true">` +
         `<rect x="${r1(x - 9)}" y="${r1(y - 9)}" width="18" height="18" rx="3"/>` +
         `<text x="${r1(x)}" y="${r1(y + 0.5)}" text-anchor="middle" dominant-baseline="central">${i + 1}</text>` +
         `</g>`,
