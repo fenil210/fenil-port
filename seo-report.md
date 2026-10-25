@@ -1,6 +1,6 @@
 # SEO and GEO report: fenilramoliya.com
 
-Status on 25 October 2026, round two: the research page, the articles and the approved copy are built, checked on a local production build, committed and pushed to `main`, which deploys. Round one (technical, structured data, GEO, accessibility, security headers) goes out in the same push. The dashboard items under "Yours to do" are still open.
+Status on 25 October 2026, round two: the research page, the articles and the approved copy are built, checked on a local production build, pushed to `main` and checked again on the live site. Round one (technical, structured data, GEO, accessibility, security headers) goes out in the same push. The dashboard items under "Yours to do" are still open.
 
 ## At a glance
 
@@ -12,10 +12,11 @@ Status on 25 October 2026, round two: the research page, the articles and the ap
 | Structured data | none | ProfilePage and Person; 28 ScholarlyArticle; Blog; 10 BlogPosting |
 | Sitemap, robots policy, llms.txt | none | all three; sitemap lists all 13 pages |
 | Markdown copies for agents | none | home, research and every article, kept out of search with `noindex` |
-| Lighthouse, home, mobile | 99 / 96 / 100 / 100 | 98 / 100 / 100 / 100 |
+| Lighthouse, home, mobile | 99 / 96 / 100 / 100 | 99 / 100 / 100 / 100 |
+| Lighthouse, home, desktop | 97 / 96 / 100 / 100 | 99 / 100 / 100 / 100 |
 | Lighthouse, an article, mobile | (no such page) | 100 / 100 / 100 / 100 |
 
-Scores are performance / accessibility / best practices / SEO. "Now" is the local production build; the live numbers after this deploy are checked separately and may differ by a point or two.
+Scores are performance / accessibility / best practices / SEO, measured on the live site after this deploy.
 
 ## Setup
 
@@ -46,7 +47,18 @@ Notes:
   - Playwright at 375 px and 1440 px in both themes on all 14 pages: no horizontal overflow, no console errors.
   - A script that checks every name and headline in each page's JSON-LD against the page's visible text.
 
-## Scorecard (round two, local build)
+## Scorecard (round two)
+
+Live, on fenilramoliya.com after the deploy:
+
+| Page | Mobile | Desktop | Mobile LCP | Mobile CLS |
+| --- | --- | --- | --- | --- |
+| Home | 99 / 100 / 100 / 100 | 99 / 100 / 100 / 100 | 1.8 s | 0.003 |
+| /research/ | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 | 1.3 s | 0.002 |
+| /articles/ | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 | 1.3 s | 0.022 |
+| An article | 100 / 100 / 100 / 100 | 97 / 100 / 100 / 100 | 1.4 s | 0.001 |
+
+On the local production build before the push:
 
 | Page | Mobile | Desktop | Mobile LCP | Mobile CLS |
 | --- | --- | --- | --- | --- |
@@ -56,6 +68,8 @@ Notes:
 | An article | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 | 1.1 s | 0.001 |
 
 - Total blocking time is 0 ms everywhere.
+- The article's 97 on desktop is a 0.6 s first paint over the network; locally it was 100.
+- PageSpeed Insights was out of its daily quota, so these are Lighthouse 12 runs from this machine.
 - Mobile is Lighthouse's simulated slow 4G, so a 98 run can be a 100 the next time; across four home runs, mobile performance ranged 95 to 99.
 - What Lighthouse still lists, none of it failing a category: the home page's DOM size (1,501 elements, mostly the inline drawings, whose size reduction you chose to skip), and a 13 KB saving on one article figure.
 - The Lighthouse SEO score only checks the basics (title, description, crawlable links, a valid robots.txt). Structured data, the sitemap and entity signals are covered by the checks below, not by that score.
@@ -117,6 +131,17 @@ Notes:
 | claude-seo GEO review | Fixed: Person `sameAs` on every page, visible byline, BibTeX in `research.md`, author on each post in the index |
 | JSON-LD against visible text | Every headline and name appears on its page, apart from "Home" in the article breadcrumb and list labels |
 | Playwright, 14 pages × 2 widths × 2 themes | No horizontal overflow, no console errors |
+
+### Checked on the live site after the deploy
+
+- All 13 sitemap pages: 200, self canonical, one h1, titles of 60 characters or less, and the structured data above.
+- `/llms-full.txt`, `/index.md`, `/research.md` and the article Markdown copies: served as text with `noindex`.
+- `/no-such-page`: 404, with the header and footer.
+- Security headers on, the CSP still report-only, and no CSP reports in the console on an article.
+- `/_astro/` files cached for a year.
+- robots.txt has no `Content-Signal` lines, so Cloudflare is not adding its managed block.
+- claude-seo `agentic_check` on home, research and an article: all core checks pass, including the response to each AI crawler user agent.
+- Still open in the dashboard: `http://` and `www.` both return 200 instead of redirecting (findings 6 and 8).
 
 ### Reviewer suggestions not taken
 
