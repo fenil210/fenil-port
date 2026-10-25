@@ -1,20 +1,16 @@
 ---
-import '@fontsource-variable/newsreader/opsz.css';
-import '@fontsource-variable/newsreader/opsz-italic.css';
-import '@fontsource/ibm-plex-mono/400.css';
-import '@fontsource/ibm-plex-mono/500.css';
-import '../styles/global.css';
-
 import Arrow from '../components/Arrow.astro';
 import Figure from '../components/Figure.astro';
 import IndiaMap from '../components/IndiaMap.astro';
+import Matrix from '../components/Matrix.astro';
+import Base from '../layouts/Base.astro';
+import { articles, fmt, href, iso } from '../lib/articles';
 import { atlas } from '../lib/atlas';
 import { drawGlobe, SIZE, VIEW } from '../lib/globe';
-import { contact, hero, links, meta, papers, path, principles, projects, recognition, research, systems, themes, travel, writing, years } from '../lib/content';
-import { graph, jsonLd } from '../lib/schema';
+import { bio, contact, hero, links, meta, papers, path, principles, projects, recognition, research, systems, travel } from '../lib/content';
+import { graph } from '../lib/schema';
 
-const fmt = (iso: string) =>
-  new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const writing = await articles();
 
 // experience chart: a year scale from the first stint to the year after today
 const asYear = (d: Date) => d.getFullYear() + (d.getMonth() + (d.getDate() - 1) / 31) / 12;
@@ -32,9 +28,6 @@ const ticks = scale.flatMap((y) => {
 // a riser joins each job to the one before it
 const prev = (i: number) => (path[i].kind === 'job' && path[i + 1]?.kind === 'job' ? path[i + 1] : undefined);
 
-const { title, description } = meta;
-// what public/og.png shows, for readers who can't see it
-const ogAlt = `Card reading “Fenil Ramoliya ${hero.title[1]}”, beside a line drawing of an orchestrator, sub-agents, tools and models.`;
 // a visit is traced through these, in page order: Fig. 11 and the masthead's bottom edge
 const spans = [
   { id: 'top', name: 'Introduction' },
@@ -46,79 +39,17 @@ const spans = [
   { id: 'travel', name: 'Travel' },
   { id: 'contact', name: 'Contact' },
 ];
-const nav = [
-  { id: 'work', name: 'Work' },
-  { id: 'research', name: 'Research' },
-  { id: 'projects', name: 'Projects' },
-  { id: 'articles', name: 'Articles' },
-  { id: 'experience', name: 'Experience' },
-  { id: 'travel', name: 'Travel' },
-];
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <meta name="author" content="Fenil Ramoliya" />
-    <link rel="canonical" href={Astro.site} />
-    <link rel="alternate" type="text/markdown" href="/index.md" title="This page as Markdown" />
-    <link rel="icon" href="/favicon.ico" sizes="48x48" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Fenil Ramoliya" />
-    <meta property="og:locale" content="en_GB" />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={Astro.site} />
-    <meta property="og:image" content={new URL('/og.png', Astro.site)} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={ogAlt} />
+<Base title={meta.title} description={meta.description} path="/" graph={graph(Astro.site!)} markdown="/index.md" spans={spans} traceNo="11">
+  <Fragment slot="head">
     <!-- iMessage plays this in the link preview; everything else shows the image -->
     <meta property="og:video" content={new URL('/og.mp4', Astro.site)} />
     <meta property="og:video:secure_url" content={new URL('/og.mp4', Astro.site)} />
     <meta property="og:video:type" content="video/mp4" />
     <meta property="og:video:width" content="1200" />
     <meta property="og:video:height" content="630" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@fenillramoliya" />
-    <meta name="twitter:creator" content="@fenillramoliya" />
-    <meta name="twitter:image" content={new URL('/og.png', Astro.site)} />
-    <meta name="twitter:image:alt" content={ogAlt} />
-    <meta name="theme-color" content="#0f0f0e" />
-    <script type="application/ld+json" set:html={jsonLd(graph(Astro.site!))} />
-    <script is:inline>
-      document.documentElement.classList.add('js');
-      try {
-        const t = localStorage.getItem('theme');
-        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-        if (t === 'light') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f6f3');
-      } catch {}
-    </script>
-  </head>
-  <body>
-    <a class="skip" href="#main">Skip to content</a>
-
-    <header class="masthead">
-      <div class="wrap masthead-row">
-        <a class="wordmark" href="#top" aria-label="Fenil Ramoliya, back to top">Fenil Ramoliya</a>
-        <nav aria-label="Sections">
-          <ul>
-            {nav.map((s) => <li><a href={`#${s.id}`}>{s.name}</a></li>)}
-          </ul>
-        </nav>
-        <a class="btn btn-sm btn-ghost" href={`mailto:${links.email}`}>Email</a>
-        <button class="theme" type="button" aria-label="Switch colour theme">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25" /><path d="M10 2.75a7.25 7.25 0 0 1 0 14.5z" /></svg>
-        </button>
-      </div>
-      <ol class="spans" aria-hidden="true">{spans.map((s) => <li data-id={s.id} />)}</ol>
-    </header>
+  </Fragment>
 
     <main id="main">
       <section class="hero wrap" id="top">
@@ -179,7 +110,7 @@ const nav = [
       </section>
 
       <section class="section wrap" id="research">
-        <h2 class="section-head">Private, explainable, secure.</h2>
+        <h2 class="section-head">Research</h2>
 
         <dl class="stats">
           {
@@ -192,47 +123,7 @@ const nav = [
           }
         </dl>
 
-        <figure class="fig matrix" id="fig-7" aria-label={`Figure 7, all ${papers.length} papers by theme and year`}>
-          <div class="matrix-grid" role="group" aria-label="All 28 papers by theme and year">
-            <span class="matrix-corner" aria-hidden="true"></span>
-            {/* the spaces render nothing in the grid, but keep the years apart for readers of raw HTML */}
-            {years.map((y) => <>{' '}<span class="matrix-year" aria-hidden="true">{y}</span></>)}
-            {
-              themes.map((th) => (
-                <>
-                  <span class="matrix-theme">
-                    {th.name}{' '}
-                    <span class="matrix-count">{papers.filter((p) => p.th === th.id).length}</span>
-                  </span>
-                  {years.map((y) => (
-                    <span class="matrix-cell">
-                      {papers
-                        .filter((p) => p.th === th.id && p.y === y)
-                        .sort((a, b) => Number(!!b.j) - Number(!!a.j))
-                        .map((p) => (
-                          <button
-                            type="button"
-                            class:list={['mark', p.j && 'journal']}
-                            data-title={p.t}
-                            data-meta={`${p.v}, ${p.y}${p.j ? ' · journal article' : ''}${p.first ? ' · first author' : ''}`}
-                            aria-label={`${p.t}. ${p.v}, ${p.y}.`}
-                          />
-                        ))}
-                    </span>
-                  ))}
-                </>
-              ))
-            }
-          </div>
-          <figcaption>
-            <span class="fig-no" aria-hidden="true">Fig. 7</span>{' '}
-            <span class="matrix-readout" aria-live="polite">
-              <span class="readout-default"><span class="key key-j"></span> Journal article <span class="key"></span> Conference paper</span>
-              <span class="readout-title"></span>
-              <span class="readout-meta"></span>
-            </span>
-          </figcaption>
-        </figure>
+        <Matrix no="7" />
 
         <div class="papers">
           <p class="label-inline">Most cited</p>
@@ -240,22 +131,22 @@ const nav = [
             {
               research.selected.map((p) => (
                 <li>
-                  <p class="paper-title">{p.title}</p>
+                  <p class="paper-title"><a href={`/research/#${p.id}`}>{p.t}</a></p>
                   <p class="paper-meta">
-                    {p.venue}, {p.year}
+                    {p.v}, {p.y}
                     {p.first && <span> · first author</span>}
-                    {p.cites && <span> · {p.cites} citations</span>}
+                    {p.c && <span> · {p.c} citations</span>}
                   </p>
                 </li>
               ))
             }
           </ol>
         </div>
-        <p class="more"><a href={links.scholar}>All papers on Google Scholar</a></p>
+        <p class="more"><a href="/research/">All {papers.length} papers, with authors and DOIs</a></p>
       </section>
 
       <section class="section wrap" id="projects">
-        <h2 class="section-head">Small tools, built after hours</h2>
+        <h2 class="section-head">Projects</h2>
         <ol class="rows projects">
           {
             projects.map((p) => (
@@ -279,19 +170,21 @@ const nav = [
           {
             writing.map((w) => (
               <li>
-                <a href={w.href}>
-                  <time datetime={w.date}>{fmt(w.date)}</time>
-                  <span class="row-name">{w.title}</span>
+                <a href={href(w)}>
+                  <time datetime={iso(w.data.date)}>{fmt(w.data.date)}</time>
+                  <span class="row-name">{w.data.title}</span>
                   <Arrow />
                 </a>
               </li>
             ))
           }
         </ol>
+        <p class="more"><a href="/articles/">All articles, with how long each takes to read</a></p>
       </section>
 
       <section class="section wrap" id="experience">
         <h2 class="section-head">Experience</h2>
+        <p class="section-dek">{bio}</p>
         <div class="chart" data-t0={t0} data-t1={t1} style={`--now:${at(today)};--years:${t1 - t0}`}>
           <div class="chart-axis lane" aria-hidden="true">
             {
@@ -343,7 +236,7 @@ const nav = [
       </section>
 
       <section class="section wrap" id="travel">
-        <h2 class="section-head">Elsewhere</h2>
+        <h2 class="section-head">Travel</h2>
         <p class="section-dek">{travel.dek}</p>
 
         <dl class="stats">
@@ -401,9 +294,10 @@ const nav = [
       </section>
 
       <section class="section wrap contact" id="contact">
-        <h2 class="contact-mail">
+        <h2 class="section-head">Contact</h2>
+        <p class="contact-mail">
           <a href={`mailto:${links.email}`}>{links.email.split('@')[0]}<wbr />@{links.email.split('@')[1]}</a>
-        </h2>
+        </p>
         <p class="intro">
           {contact.intro}{' '}
           <span class="clock" data-tz="Asia/Kolkata">{contact.home}</span>
@@ -417,40 +311,7 @@ const nav = [
       </section>
     </main>
 
-    <footer class="wrap colophon">
-      <figure class="fig trace" id="fig-11">
-        <div class="trace-axis" aria-hidden="true"></div>
-        <ol class="trace-rows">
-          <li class="span root">
-            <span class="span-name">Visit</span>
-            <span class="span-dur"></span>
-            <span class="track" aria-hidden="true"><span class="seg" style="--a:0;--b:100"></span></span>
-          </li>
-          {
-            spans.map((s) => (
-              <li class="span" data-id={s.id}>
-                <span class="span-name">{s.name}</span>
-                <span class="span-dur"></span>
-                <span class="track" aria-hidden="true" />
-              </li>
-            ))
-          }
-        </ol>
-        <figcaption>
-          <span class="fig-no" aria-hidden="true">Fig. 11</span>{' '}
-          <span>This visit as a trace. Each section is a span, timed while it is on screen. Nothing leaves this page.</span>
-        </figcaption>
-      </figure>
-      <p class="colophon-copy">© 2026 Fenil Ramoliya</p>
-      <p class="colophon-credits">
-        Set in Newsreader and IBM Plex Mono. Figures are drawn by a small axonometric renderer written for this site, maps with
-        d3-geo from <a href="https://www.naturalearthdata.com">Natural Earth</a> and <a href="https://github.com/datameet/maps">DataMeet</a>{' '}
-        data (CC BY 4.0). Built with Astro and Bun.
-      </p>
-    </footer>
-
     <script>
       import '../scripts/main';
     </script>
-  </body>
-</html>
+</Base>

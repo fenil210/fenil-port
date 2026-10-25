@@ -1,17 +1,17 @@
-// The page as plain Markdown, for AI answer engines and agents that read text rather
-// than HTML: llms.txt is the short index, llms-full.txt and index.md the whole page.
+// The site as plain Markdown, for AI answer engines and agents that read text rather than
+// HTML: llms.txt is the short index, llms-full.txt and index.md the home page, research.md
+// the research page, and each article has a copy at its address with .md in place of the slash.
 
-import { contact, hero, links, meta, papers, path, principles, projects, recognition, research, systems, themes, travel, writing } from './content';
-
-const fmt = (iso: string) =>
-  new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+import { articles, fmt, href, series, type Article } from './articles';
+import { bibtex, doiUrl, venue } from './cite';
+import { bio, citedOn, contact, hero, links, meta, papers, path, principles, projects, recognition, research, systems, themes, travel, years } from './content';
 
 const job = path.find((p) => p.kind === 'job' && p.to === undefined)!;
 const name = hero.title[0];
+const asOf = fmt(new Date(citedOn));
 const facts = (site: URL) => [
   `- Role: ${job.role}, ${job.where}`,
-  `- Based in: Mumbai, India`,
-  `- Research: ${research.stats.map((s) => `${s.value} ${s.label}`).join(', ')} (Google Scholar)`,
+  `- Research: ${research.stats.map((s) => `${s.value} ${s.label}`).join(', ')} (Google Scholar, ${asOf})`,
   `- Website: ${site.href}`,
   `- Email: ${links.email}`,
 ];
@@ -21,21 +21,26 @@ const profiles = [
   `- [Google Scholar](${links.scholar})`,
   `- [X](${links.x})`,
 ];
+const url = (site: URL, p: string) => new URL(p, site).href;
+const md = (site: URL, a: Article) => url(site, `/articles/${a.id}.md`);
 
-export function llms(site: URL) {
+export async function llms(site: URL) {
+  const list = await articles();
   return [
     `# ${name}`,
     '',
     `> ${meta.description}`,
     '',
-    hero.lede,
+    bio,
     '',
     ...facts(site),
     '',
     '## The site',
     '',
-    `- [Home page](${site.href}): systems in production, research, projects, articles, experience and travel, on one page`,
-    `- [Full text](${new URL('/llms-full.txt', site)}): everything on the home page as Markdown`,
+    `- [Home page](${site.href}): systems in production, research, projects, articles, experience and travel`,
+    `- [Research](${url(site, '/research/')}): all ${papers.length} papers with authors, venues, DOIs and BibTeX ([Markdown](${url(site, '/research.md')}))`,
+    `- [Articles](${url(site, '/articles/')}): ${list.length} articles on AI engineering, each also as Markdown`,
+    `- [Full text](${url(site, '/llms-full.txt')}): everything on the home page as Markdown`,
     '',
     '## Profiles',
     '',
@@ -47,14 +52,15 @@ export function llms(site: URL) {
     '',
     '## Articles',
     '',
-    ...writing.map((w) => `- [${w.title}](${w.href}): ${fmt(w.date)}`),
+    ...list.map((a) => `- [${a.data.title}](${url(site, href(a))}): ${fmt(a.data.date)}. ${a.data.description} ([Markdown](${md(site, a)}))`),
     '',
   ].join('\n');
 }
 
-export function full(site: URL) {
+export async function full(site: URL) {
+  const list = await articles();
   const paper = (p: (typeof papers)[number]) =>
-    `- ${p.t}. ${p.v}, ${p.y}.${p.j ? ' Journal article.' : ''}${p.first ? ' First author.' : ''}`;
+    `- ${p.t}. ${p.v}, ${p.y}.${p.j ? ' Journal article.' : ''}${p.first ? ' First author.' : ''} ${doiUrl(p)}`;
   return [
     `# ${name}`,
     '',
@@ -79,9 +85,7 @@ export function full(site: URL) {
     '',
     '### Most cited',
     '',
-    ...research.selected.map(
-      (p, i) => `${i + 1}. ${p.title}. ${p.venue}, ${p.year}.${p.first ? ' First author.' : ''} ${p.cites} citations.`,
-    ),
+    ...research.selected.map((p, i) => `${i + 1}. ${p.t}. ${p.v}, ${p.y}.${p.first ? ' First author.' : ''} ${p.c} citations.`),
     '',
     '### All papers, by theme',
     '',
@@ -91,7 +95,7 @@ export function full(site: URL) {
       ...papers.filter((p) => p.th === t.id).sort((a, b) => b.y - a.y).map(paper),
       '',
     ]),
-    `All papers on Google Scholar: ${links.scholar}`,
+    `Every paper with its authors, venue and BibTeX: ${url(site, '/research/')}`,
     '',
     '## Projects',
     '',
@@ -99,9 +103,11 @@ export function full(site: URL) {
     '',
     '## Articles',
     '',
-    ...writing.map((w) => `- [${w.title}](${w.href}), ${fmt(w.date)}`),
+    ...list.map((a) => `- [${a.data.title}](${url(site, href(a))}), ${fmt(a.data.date)}`),
     '',
     '## Experience',
+    '',
+    bio,
     '',
     ...path.map((p) => `- ${p.role}, ${p.where}, ${p.when}`),
     '',
@@ -109,7 +115,7 @@ export function full(site: URL) {
     '',
     ...recognition.map((r) => `- ${r.what}, ${r.where}`),
     '',
-    '## Elsewhere',
+    '## Travel',
     '',
     travel.dek,
     '',
@@ -121,6 +127,61 @@ export function full(site: URL) {
     `${contact.intro} ${contact.home}`,
     '',
     `Email: ${links.email}`,
+    '',
+  ].join('\n');
+}
+
+export function researchMd(site: URL) {
+  const theme = Object.fromEntries(themes.map((t) => [t.id, t.name]));
+  const authors = (au: string) => au.replace('F. Ramoliya', '**F. Ramoliya**');
+  return [
+    '# Research',
+    '',
+    `${name}: all ${papers.length} peer-reviewed papers, newest first. ${research.stats.map((s) => `${s.value} ${s.label}`).join(' · ')} (Google Scholar, ${asOf}).`,
+    '',
+    `Page: ${url(site, '/research/')}`,
+    '',
+    ...[...years].reverse().flatMap((y) => [
+      `## ${y}`,
+      '',
+      ...papers
+        .filter((p) => p.y === y)
+        .flatMap((p) => [
+          `### ${p.id}. ${p.t}`,
+          '',
+          authors(p.au),
+          '',
+          `*${venue(p)}*. ${p.j ? 'Journal article' : 'Conference paper'} · ${theme[p.th]}${p.first ? ' · First author' : ''}`,
+          '',
+          `DOI: [${p.doi}](${doiUrl(p)})${p.c === undefined ? '' : ` · ${p.c} citations`}`,
+          '',
+          '```bibtex',
+          bibtex(p),
+          '```',
+          '',
+        ]),
+    ]),
+  ].join('\n');
+}
+
+// an article's text as written, with its figures as their descriptions and links made absolute
+export function articleMd(site: URL, a: Article) {
+  let n = 0;
+  const stop = (s: string) => (/[.!?]["”’)]*$/.test(s) ? s : `${s}.`);
+  const fig = (alt: string, title?: string) => `*Figure ${++n}. ${[alt, title].filter(Boolean).map(stop).join(' ')}*`;
+  const body = (a.body ?? '')
+    .replace(/\[!\[([^\]]*)\]\([^)\s]+(?:\s+"([^"]*)")?\)\]\(([^)]+)\)/g, (_, alt, title, link) => `${fig(alt, title)} (${link})`)
+    .replace(/!\[([^\]]*)\]\([^)\s]+(?:\s+"([^"]*)")?\)/g, (_, alt, title) => fig(alt, title))
+    .replace(/\]\(\//g, `](${site.origin}/`);
+  return [
+    `# ${a.data.title}`,
+    '',
+    [name, fmt(a.data.date), a.data.series && `${series}, ${a.data.series}`].filter(Boolean).join(' · '),
+    '',
+    `Page: ${url(site, href(a))}`,
+    `First published on X: ${a.data.x}`,
+    '',
+    body.trim(),
     '',
   ].join('\n');
 }

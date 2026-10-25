@@ -1,45 +1,29 @@
 ---
-import '@fontsource-variable/newsreader/opsz.css';
-import '@fontsource/ibm-plex-mono/400.css';
-import '../styles/global.css';
+import Base from '../layouts/Base.astro';
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Page not found · Fenil Ramoliya</title>
-    <meta name="robots" content="noindex" />
-    <link rel="icon" href="/favicon.ico" sizes="48x48" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <meta name="theme-color" content="#0f0f0e" />
-    <script is:inline>
-      try {
-        if (localStorage.getItem('theme') === 'light') document.documentElement.dataset.theme = 'light';
-      } catch {}
-    </script>
-  </head>
-  <body>
-    <main class="wrap missing">
-      <p class="fig-no">404</p>
-      <h1 class="display">Page not found</h1>
-      <p class="lede">There is nothing at this address. If an AI assistant gave you this link, it probably made it up.</p>
-      <ul class="hero-links">
-        <li><a class="btn" href="/">Go to fenilramoliya.com</a></li>
-        <li class="for-agents">For agents: <a href="/llms.txt">/llms.txt</a></li>
-      </ul>
-    </main>
-  </body>
-</html>
+<Base title="Page not found · Fenil Ramoliya" description="There is nothing at this address." path="/404" noindex>
+  <main id="main" class="wrap missing">
+    <p class="fig-no">404</p>
+    <h1 class="display">Page not found</h1>
+    <p class="lede">There is nothing at this address. If an AI assistant gave you this link, it probably made it up.</p>
+    <ul class="hero-links">
+      <li><a class="btn" href="/">Go to fenilramoliya.com</a></li>
+      <li><a href="/articles/">Articles</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li class="for-agents">For agents: <a href="/llms.txt">/llms.txt</a></li>
+    </ul>
+  </main>
+</Base>
 
 <style>
   .missing {
-    min-height: 100vh;
+    min-height: calc(100svh - 64px);
     display: grid;
     align-content: center;
     justify-items: start;
     gap: var(--s3);
+    padding-block: var(--s5);
   }
 
   .missing .display,

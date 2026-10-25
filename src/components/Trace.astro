@@ -1,0 +1,36 @@
+---
+// This visit as a trace, laid out like the experience chart with time in place of years.
+// trace.ts times each section while it is the one being read and draws the spans.
+import type { Span } from '../layouts/Base.astro';
+
+interface Props {
+  no: string;
+  spans: Span[];
+  text?: string;
+}
+const { no, spans, text = 'This visit as a trace. Each section is a span, timed while it is on screen. Nothing leaves this page.' } = Astro.props;
+---
+
+<figure class="fig trace" id={`fig-${no}`}>
+  <div class="trace-axis" aria-hidden="true"></div>
+  <ol class="trace-rows">
+    <li class="span root">
+      <span class="span-name">Visit</span>
+      <span class="span-dur"></span>
+      <span class="track" aria-hidden="true"><span class="seg" style="--a:0;--b:100"></span></span>
+    </li>
+    {
+      spans.map((s) => (
+        <li class="span" data-id={s.id}>
+          <span class="span-name">{s.name}</span>
+          <span class="span-dur" />
+          <span class="track" aria-hidden="true" />
+        </li>
+      ))
+    }
+  </ol>
+  <figcaption>
+    <span class="fig-no" aria-hidden="true">Fig. {no}</span>{' '}
+    <span>{text}</span>
+  </figcaption>
+</figure>

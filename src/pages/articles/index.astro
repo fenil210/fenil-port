@@ -1,0 +1,67 @@
+---
+import Arrow from '../../components/Arrow.astro';
+import Base from '../../layouts/Base.astro';
+import { fmt, href, iso, mins, rendered, series } from '../../lib/articles';
+import { articlesGraph } from '../../lib/schema';
+
+const list = await rendered();
+const description =
+  'Articles by Fenil Ramoliya on AI engineering: when to use an agent, how to manage its context, how to orchestrate subagents, and what the vocabulary means.';
+// each article's span is as long as it takes to read, against the longest
+const longest = Math.max(...list.map((a) => a.prose.minutes));
+const posts = list.map((a) => ({ title: a.data.title, description: a.data.description, path: href(a), date: a.data.date, x: a.data.x, words: a.prose.words }));
+---
+
+<Base
+  title="Articles · Fenil Ramoliya"
+  description={description}
+  path="/articles/"
+  graph={articlesGraph(Astro.site!, description, posts)}
+  here="articles"
+>
+  <main id="main">
+    <section class="wrap page-head" id="top">
+      <h1 class="display">Articles</h1>
+      <p class="lede">
+        Writing on AI engineering: when to use an agent, how to manage its context, how to orchestrate subagents, and what the
+        vocabulary means. Each article was first published on X, where the replies are.
+      </p>
+    </section>
+
+    <section class="section wrap shelf" aria-label="All articles">
+      <figure class="fig" id="fig-1">
+        <ol class="rows shelf-rows">
+          {
+            list.map((a) => (
+              <li>
+                <a href={href(a)}>
+                  <time datetime={iso(a.data.date)}>{fmt(a.data.date)}</time>
+                  <span class="shelf-text">
+                    <span class="row-name">{a.data.title}</span>
+                    <span class="row-text">{a.data.description}</span>
+                    {a.data.series && (
+                      <span class="shelf-series">
+                        {series}, {a.data.series}
+                      </span>
+                    )}
+                  </span>
+                  <span class="shelf-span">
+                    <span class="shelf-track" aria-hidden="true">
+                      <span class="seg" style={`--a:0;--b:${((a.prose.minutes / longest) * 100).toFixed(2)}`} />
+                    </span>
+                    <span class="shelf-min">{mins(a.prose.minutes)} min</span>
+                  </span>
+                  <Arrow />
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+        <figcaption>
+          <span class="fig-no" aria-hidden="true">Fig. 1</span>{' '}
+          <span>Each article as a span, as long as it takes to read at 230 words a minute, with a little more for each figure.</span>
+        </figcaption>
+      </figure>
+    </section>
+  </main>
+</Base>

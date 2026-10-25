@@ -15,8 +15,12 @@ export const links = {
 export const meta = {
   title: 'Fenil Ramoliya · Software Engineer, AI',
   description:
-    'Fenil Ramoliya builds AI agents and the systems they run on: harnesses and runtimes, tools and protocols, and the infrastructure that keeps them fast, affordable and correct under real traffic.',
+    'Fenil Ramoliya builds AI agents and the systems they run on. Software Engineer, AI at Cactus Communications, with 28 peer-reviewed papers.',
 };
+
+// the short biography: the experience section's dek, the structured data's description and llms.txt's summary
+export const bio =
+  'Fenil Ramoliya is a Software Engineer, AI at Cactus Communications, working mostly on Paperpal. The work is AI agents and the systems they run on: harnesses and runtimes, tools and protocols, and the infrastructure under them. Fenil has a B.Tech in Computer Science and Engineering from Nirma University and 28 peer-reviewed papers.';
 
 export const contact = {
   intro: 'Write if you are building with agents, running LLMs in production, or want to talk about research.',
@@ -229,61 +233,6 @@ export const projects = [
   },
 ];
 
-const x = (id: string) => `https://x.com/fenillramoliya/status/${id}`;
-
-export const writing = [
-  {
-    date: '2026-10-21',
-    title: 'Bugs Aren’t the Boogeyman Anymore',
-    href: x('2112819727202734364'),
-  },
-  {
-    date: '2026-10-12',
-    title: 'How I Got Codex to Orchestrate 50+ Subagent Runs',
-    href: x('2109584843168178639'),
-  },
-  {
-    date: '2026-10-05',
-    title: 'Context Shouldn’t Be Append-Only',
-    href: x('2107182475399283159'),
-  },
-  {
-    date: '2026-10-04',
-    title: 'Stop Calling Everything an Agent Framework',
-    href: x('2106641321599410667'),
-  },
-  {
-    date: '2026-05-09',
-    title: 'Tokens, Embeddings and Context Windows',
-    href: x('2053047398075924769'),
-  },
-  {
-    date: '2026-05-01',
-    title: 'The Nine Dials',
-    href: x('2050197954863255892'),
-  },
-  {
-    date: '2026-04-25',
-    title: 'Vocabulary as a Design Primitive',
-    href: x('2047996494146687354'),
-  },
-  {
-    date: '2026-04-18',
-    title: 'Workflow, Agent, or Multi Agent? Pick One',
-    href: x('2045422362578100362'),
-  },
-  {
-    date: '2026-04-12',
-    title: 'Field Notes: AI Engineering',
-    href: x('2043286966385684694'),
-  },
-  {
-    date: '2026-04-09',
-    title: 'The Builder Who Teaches. The Teacher Who Builds.',
-    href: x('2042327764829946196'),
-  },
-];
-
 type Theme = 'private' | 'explainable' | 'secure' | 'applied';
 
 export const themes: { id: Theme; name: string }[] = [
@@ -295,36 +244,43 @@ export const themes: { id: Theme; name: string }[] = [
 
 export const years = [2023, 2024, 2025, 2026];
 
-// every peer-reviewed paper; j = journal article, first = first author
-export const papers: { t: string; v: string; y: number; th: Theme; j?: true; first?: true }[] = [
-  { t: 'HyDiT: Heterogeneous Multi-Teacher Knowledge Distillation for Compressing Vision Transformers in Autonomous Electric Vehicles', v: 'Journal of Circuits, Systems and Computers', y: 2026, th: 'applied', j: true },
-  { t: 'F-Transformer: a federated transformer for efficient and privacy-preserving sequence generation', v: 'Scientific Reports', y: 2026, th: 'private', j: true },
-  { t: 'MetaPrism: Intelligent Personalized Engagement Policy for User’s Security and Privacy in Metaverse Environment', v: 'Security and Privacy', y: 2025, th: 'secure', j: true },
-  { t: 'Blockchain-assisted healthcare insurance fraud detection framework using ensemble learning', v: 'Computers and Electrical Engineering', y: 2025, th: 'secure', j: true },
-  { t: 'Explainable AI for gastrointestinal disease diagnosis in telesurgery Healthcare 4.0', v: 'Computers and Electrical Engineering', y: 2024, th: 'explainable', j: true },
-  { t: 'ML-Based Energy Consumption and Distribution Framework Analysis for EVs and Charging Stations in Smart Grid Environment', v: 'IEEE Access', y: 2024, th: 'applied', j: true, first: true },
-  { t: 'Towards Privacy-Preserving and Explainable AI for Parkinson’s Disease Diagnosis Using Federated Learning on MRI Data', v: 'Workshop on Intelligent Immersification in the Metaverse', y: 2025, th: 'private' },
-  { t: 'Explainable Ensemble Learning-Based Robust Intrusion Detection Framework for Power Systems', v: 'IEEE R10-HTC', y: 2025, th: 'secure' },
-  { t: 'AI-enabled Framework for Intrusion Detection in DNP3-Enabled Smart Critical Infrastructures', v: 'IEEE IPRIA', y: 2025, th: 'secure' },
-  { t: 'Securing IoT-enabled Metaverse with Authentication and Threat Classification Framework Using DL', v: 'IEEE ISACC', y: 2025, th: 'secure' },
-  { t: 'Hybrid Explainable DL Framework for Securing Smart Critical Infrastructure Using CNN-LSTM', v: 'IEEE IC3ECSBHI', y: 2025, th: 'secure' },
-  { t: 'Explainable FL-Based Framework for Diagnosis of Diabetic Retinopathy in Healthcare 4.0 Environment', v: 'IEEE ICSPIS', y: 2024, th: 'private' },
-  { t: 'SDN-care: Deep Learning-assisted Software Defined Networking Framework for IoT-Healthcare', v: 'IEEE GLOBECOM', y: 2024, th: 'secure' },
-  { t: 'XSH-ParK: XAI-based Parkinson Disease Diagnosis Framework for Smart Healthcare Using MRI Images', v: 'IEEE GLOBECOM', y: 2024, th: 'explainable' },
-  { t: 'EL-FAM: Power System Intrusion Detection with Ensemble Learning for False Alarm Mitigation', v: 'IEEE CITS', y: 2024, th: 'secure' },
-  { t: 'Smart-Sec: DL-based Cyber Threat Detection for Autonomous Smart Home System to Enhance Human Life Expectancy', v: 'IEEE CONECCT', y: 2024, th: 'secure' },
-  { t: 'X-CaD: Explainable AI for Skin Cancer Diagnosis in Healthcare 4.0 Telesurgery', v: 'IEEE ICC', y: 2024, th: 'explainable', first: true },
-  { t: 'X-NET: Explainable AI-Based Network Data Security Framework for Healthcare 4.0', v: 'IEEE ICC Workshops', y: 2024, th: 'explainable' },
-  { t: 'Deep Learning-based Intrusion Detection Approach for Autonomous Electric Vehicles', v: 'IEEE ICC Workshops', y: 2024, th: 'secure', first: true },
-  { t: 'TL-AGRO: Transfer Learning-based Perilous Insect Detection Framework for Smart Agriculture Underlying Edge Computing', v: 'IEEE CONIT', y: 2024, th: 'applied', first: true },
-  { t: 'A Green IoT-Integrated AI-Based EV Scheduling Scheme for Efficient Charging Station Selection', v: 'IEEE IWCMC', y: 2024, th: 'applied', first: true },
-  { t: 'FAST: AI-based Network Traffic Analysis and Load Balancing Framework Underlying SDN Clusters', v: 'IEEE SCIoT', y: 2024, th: 'applied' },
-  { t: 'Ensemble Learning for Network Data Classification with SDN Clustering Underlying Smart Power Grid-Enabled Smart Cities', v: 'IEEE ICPEICES', y: 2024, th: 'applied' },
-  { t: 'DNN-based Secure Remote Patient Data Analysis Framework for Improving Human Life Expectancy in Healthcare 4.0', v: 'Procedia Computer Science', y: 2024, th: 'secure' },
-  { t: 'SEAM: Deep Learning-based Secure Message Exchange Framework for Autonomous EVs', v: 'IEEE GLOBECOM Workshops', y: 2023, th: 'secure', first: true },
-  { t: 'Transfer Learning and CNN-Based Vehicle Identification Approach for Hit-and-Run Cases', v: 'IEEE AECE', y: 2023, th: 'applied' },
-  { t: 'Deep and Transfer Learning-based Research Article Recommendation System for Healthcare Services', v: 'IEEE ICI', y: 2023, th: 'applied' },
-  { t: 'DL-Based Secure Wearable Scheme for Remote Patient Data Monitoring in Healthcare 4.0', v: 'IEEE ICCCIS', y: 2023, th: 'secure', first: true },
+/* every peer-reviewed paper, in the CV's order and numbering (J journal, C conference).
+   j = journal article, first = first author, au = authors as in the CV, at = volume and pages,
+   vf = the venue's full name, c = Google Scholar citations on 25 Oct 2026 (none if not listed) */
+export interface Paper {
+  id: string; t: string; v: string; y: number; th: Theme; j?: true; first?: true;
+  au: string; at: string; vf: string; doi: string; c?: number;
+}
+export const citedOn = '2026-10-25';
+export const papers: Paper[] = [
+  { id: 'J1', t: 'HyDiT: Heterogeneous Multi-Teacher Knowledge Distillation for Compressing Vision Transformers in Autonomous Electric Vehicles', v: 'Journal of Circuits, Systems and Computers', y: 2026, th: 'applied', j: true, au: 'M. Patel, N. Patel, F. Ramoliya, R. Gupta, N. Jadav, S. Tanwar, M. Li, W. Hong', at: '2646002', vf: 'Journal of Circuits, Systems and Computers', doi: '10.1142/s0218126626460023', c: 0 },
+  { id: 'J2', t: 'F-Transformer: a federated transformer for efficient and privacy-preserving sequence generation', v: 'Scientific Reports', y: 2026, th: 'private', j: true, au: 'N. Patel, S. Brahmbhatt, F. Ramoliya, O. Vyas, A. Nair, T. Vyas, N. Jadav, S. Tanwar, A. Alabdultif', at: '16, 14093', vf: 'Scientific Reports', doi: '10.1038/s41598-026-40881-0', c: 22 },
+  { id: 'J3', t: 'MetaPrism: Intelligent Personalized Engagement Policy for User’s Security and Privacy in Metaverse Environment', v: 'Security and Privacy', y: 2025, th: 'secure', j: true, au: 'A. Gupta, P. Patel, K. Darji, F. Ramoliya, R. Gupta, S. Tanwar, K. Khajuria, D. Garg', at: '8(2), e70009', vf: 'Security and Privacy', doi: '10.1002/spy2.70009', c: 1 },
+  { id: 'J4', t: 'Blockchain-assisted healthcare insurance fraud detection framework using ensemble learning', v: 'Computers and Electrical Engineering', y: 2025, th: 'secure', j: true, au: 'K. Kapadiya, F. Ramoliya, K. Gohil, U. Patel, R. Gupta, S. Tanwar, J. Rodrigues, F. Alqahtani, A. Tolba', at: '122, 109898', vf: 'Computers and Electrical Engineering', doi: '10.1016/j.compeleceng.2024.109898', c: 36 },
+  { id: 'J5', t: 'Explainable AI for gastrointestinal disease diagnosis in telesurgery Healthcare 4.0', v: 'Computers and Electrical Engineering', y: 2024, th: 'explainable', j: true, au: 'M. Patel, K. Gohil, A. Gohil, F. Ramoliya, R. Gupta, S. Tanwar, Z. Polkowski, F. Alqahtani, A. Tolba', at: '118, 109414', vf: 'Computers and Electrical Engineering', doi: '10.1016/j.compeleceng.2024.109414', c: 25 },
+  { id: 'J6', t: 'ML-Based Energy Consumption and Distribution Framework Analysis for EVs and Charging Stations in Smart Grid Environment', v: 'IEEE Access', y: 2024, th: 'applied', j: true, first: true, au: 'F. Ramoliya, C. Trivedi, K. Darji, R. Kakkar, R. Gupta, S. Tanwar, Z. Polkowski, F. Alqahtani, A. Tolba', at: '12, 23319–23337', vf: 'IEEE Access', doi: '10.1109/access.2024.3365080', c: 34 },
+  { id: 'C1', t: 'Towards Privacy-Preserving and Explainable AI for Parkinson’s Disease Diagnosis Using Federated Learning on MRI Data', v: 'Workshop on Intelligent Immersification in the Metaverse', y: 2025, th: 'private', au: 'S. Vaghsiya, R. Gupta, A. Abrol, N. Jain, F. Ramoliya, Z. Wang, S. Tanwar, A. Ng', at: '10–14', vf: 'Proceedings of the International Workshop on Intelligent Immersification in the Metaverse: AI-Driven Immersive Multimedia', doi: '10.1145/3728487.3759234', c: 0 },
+  { id: 'C2', t: 'Explainable Ensemble Learning-Based Robust Intrusion Detection Framework for Power Systems', v: 'IEEE R10-HTC', y: 2025, th: 'secure', au: 'A. Godhrawala, D. Patel, F. Ramoliya, S. Patel, L. Pathak, R. Gupta, S. Tanwar', at: '186–191', vf: 'IEEE 13th Region 10 Humanitarian Technology Conference (R10-HTC)', doi: '10.1109/r10-htc63995.2025.11394339', c: 0 },
+  { id: 'C3', t: 'AI-enabled Framework for Intrusion Detection in DNP3-Enabled Smart Critical Infrastructures', v: 'IEEE IPRIA', y: 2025, th: 'secure', au: 'D. Patel, J. Bhoye, F. Ramoliya, R. Gupta, S. Tanwar, H. Shahinzadeh, M. Bagheri', at: '1–6', vf: '7th International Conference on Pattern Recognition and Image Analysis (IPRIA)', doi: '10.1109/ipria68579.2025.11263596', c: 1 },
+  { id: 'C4', t: 'Securing IoT-enabled Metaverse with Authentication and Threat Classification Framework Using DL', v: 'IEEE ISACC', y: 2025, th: 'secure', au: 'K. Darji, C. Trivedi, R. Gupta, F. Ramoliya, S. Tanwar, S. Agrawal', at: '104–109', vf: '3rd International Conference on Intelligent Systems, Advanced Computing and Communication (ISACC)', doi: '10.1109/isacc65211.2025.10969244', c: 1 },
+  { id: 'C5', t: 'Hybrid Explainable DL Framework for Securing Smart Critical Infrastructure Using CNN-LSTM', v: 'IEEE IC3ECSBHI', y: 2025, th: 'secure', au: 'P. Patel, D. Shah, D. Shah, F. Ramoliya, R. Gupta, S. Tanwar', at: '598–604', vf: 'International Conference on Cognitive Computing in Engineering, Communications, Sciences and Biomedical Health Informatics (IC3ECSBHI)', doi: '10.1109/ic3ecsbhi63591.2025.10991074', c: 4 },
+  { id: 'C6', t: 'Explainable FL-Based Framework for Diagnosis of Diabetic Retinopathy in Healthcare 4.0 Environment', v: 'IEEE ICSPIS', y: 2024, th: 'private', au: 'P. Patel, N. Jain, H. Patni, F. Ramoliya, R. Gupta, S. Tanwar, H. Shahinzadeh', at: '85–89', vf: '10th International Conference on Signal Processing and Intelligent Systems (ICSPIS)', doi: '10.1109/ICSPIS65223.2024.10931114' },
+  { id: 'C7', t: 'SDN-care: Deep Learning-assisted Software Defined Networking Framework for IoT-Healthcare', v: 'IEEE GLOBECOM', y: 2024, th: 'secure', au: 'Y. Patel, M. Kumhar, F. Ramoliya, R. Gupta, J. Bhatia, S. Tanwar, A. Jindal, J. Rodrigues', at: '2123–2128', vf: 'IEEE Global Communications Conference (GLOBECOM)', doi: '10.1109/globecom52923.2024.10901072', c: 2 },
+  { id: 'C8', t: 'XSH-ParK: XAI-based Parkinson Disease Diagnosis Framework for Smart Healthcare Using MRI Images', v: 'IEEE GLOBECOM', y: 2024, th: 'explainable', au: 'S. Vaghasiya, F. Ramoliya, R. Gupta, S. Tanwar, J. Rodrigues, I. Woungang', at: '3521–3526', vf: 'IEEE Global Communications Conference (GLOBECOM)', doi: '10.1109/globecom52923.2024.10901665', c: 2 },
+  { id: 'C9', t: 'EL-FAM: Power System Intrusion Detection with Ensemble Learning for False Alarm Mitigation', v: 'IEEE CITS', y: 2024, th: 'secure', au: 'A. Bhavsar, S. Agvan, F. Ramoliya, M. Obaidiat, R. Gupta, S. Tanwar, K. Hsiao', at: '1–5', vf: 'International Conference on Computer, Information and Telecommunication Systems (CITS)', doi: '10.1109/cits61189.2024.10607986', c: 4 },
+  { id: 'C10', t: 'Smart-Sec: DL-based Cyber Threat Detection for Autonomous Smart Home System to Enhance Human Life Expectancy', v: 'IEEE CONECCT', y: 2024, th: 'secure', au: 'N. Jain, M. Patel, F. Ramoliya, R. Gupta, S. Tanwar, D. Garg', at: '1–6', vf: 'IEEE International Conference on Electronics, Computing and Communication Technologies (CONECCT)', doi: '10.1109/conecct62155.2024.10677162', c: 0 },
+  { id: 'C11', t: 'X-CaD: Explainable AI for Skin Cancer Diagnosis in Healthcare 4.0 Telesurgery', v: 'IEEE ICC', y: 2024, th: 'explainable', first: true, au: 'F. Ramoliya, K. Gohil, A. Gohil, R. Gupta, R. Kakkar, S. Tanwar, J. Rodrigues', at: '238–243', vf: 'IEEE International Conference on Communications (ICC)', doi: '10.1109/icc51166.2024.10622832', c: 7 },
+  { id: 'C12', t: 'X-NET: Explainable AI-Based Network Data Security Framework for Healthcare 4.0', v: 'IEEE ICC Workshops', y: 2024, th: 'explainable', au: 'N. Patel, F. Ramoliya, N. Jadav, R. Gupta, S. Tanwar, G. Aujla', at: '481–486', vf: 'IEEE International Conference on Communications Workshops (ICC Workshops)', doi: '10.1109/iccworkshops59551.2024.10615382', c: 6 },
+  { id: 'C13', t: 'Deep Learning-based Intrusion Detection Approach for Autonomous Electric Vehicles', v: 'IEEE ICC Workshops', y: 2024, th: 'secure', first: true, au: 'F. Ramoliya, K. Darji, C. Trivedi, R. Gupta, R. Kakkar, S. Tanwar, S. Agrawal', at: '1828–1833', vf: 'IEEE International Conference on Communications Workshops (ICC Workshops)', doi: '10.1109/iccworkshops59551.2024.10615796', c: 5 },
+  { id: 'C14', t: 'TL-AGRO: Transfer Learning-based Perilous Insect Detection Framework for Smart Agriculture Underlying Edge Computing', v: 'IEEE CONIT', y: 2024, th: 'applied', first: true, au: 'F. Ramoliya, K. Darji, R. Kakkar, R. Gupta, S. Tanwar, S. Agrawal', at: '1–6', vf: '4th International Conference on Intelligent Technologies (CONIT)', doi: '10.1109/conit61985.2024.10627105', c: 3 },
+  { id: 'C15', t: 'A Green IoT-Integrated AI-Based EV Scheduling Scheme for Efficient Charging Station Selection', v: 'IEEE IWCMC', y: 2024, th: 'applied', first: true, au: 'F. Ramoliya, R. Gupta, K. Darji, C. Trivedi, R. Kakkar, S. Tanwar, M. Guizani', at: '327–332', vf: 'International Wireless Communications and Mobile Computing (IWCMC)', doi: '10.1109/iwcmc61514.2024.10592470', c: 4 },
+  { id: 'C16', t: 'FAST: AI-based Network Traffic Analysis and Load Balancing Framework Underlying SDN Clusters', v: 'IEEE SCIoT', y: 2024, th: 'applied', au: 'D. Shah, D. Shah, F. Ramoliya, R. Gupta, H. Shah, S. Tanwar, H. Shahinzadeh, D. Garg', at: '82–87', vf: '8th International Conference on Smart Cities, Internet of Things and Applications (SCIoT)', doi: '10.1109/sciot62588.2024.10570111', c: 9 },
+  { id: 'C17', t: 'Ensemble Learning for Network Data Classification with SDN Clustering Underlying Smart Power Grid-Enabled Smart Cities', v: 'IEEE ICPEICES', y: 2024, th: 'applied', au: 'M. Patel, N. Jain, J. Patel, F. Ramoliya, R. Gupta, S. Tanwar', at: '470–475', vf: 'IEEE Third International Conference on Power Electronics, Intelligent Control and Energy Systems (ICPEICES)', doi: '10.1109/icpeices62430.2024.10719285', c: 2 },
+  { id: 'C18', t: 'DNN-based Secure Remote Patient Data Analysis Framework for Improving Human Life Expectancy in Healthcare 4.0', v: 'Procedia Computer Science', y: 2024, th: 'secure', au: 'K. Darji, F. Ramoliya, R. Kakkar, R. Gupta, S. Tanwar, D. Garg', at: '235, 549–558', vf: 'Procedia Computer Science', doi: '10.1016/j.procs.2024.04.054', c: 3 },
+  { id: 'C19', t: 'SEAM: Deep Learning-based Secure Message Exchange Framework for Autonomous EVs', v: 'IEEE GLOBECOM Workshops', y: 2023, th: 'secure', first: true, au: 'F. Ramoliya, R. Kakkar, R. Gupta, S. Tanwar, S. Agrawal', at: '80–85', vf: 'IEEE Globecom Workshops (GC Wkshps)', doi: '10.1109/gcwkshps58843.2023.10465168', c: 8 },
+  { id: 'C20', t: 'Transfer Learning and CNN-Based Vehicle Identification Approach for Hit-and-Run Cases', v: 'IEEE AECE', y: 2023, th: 'applied', au: 'K. Darji, F. Ramoliya, C. Trivedi, R. Gupta, R. Kakkar, S. Tanwar, D. Garg', at: '898–902', vf: '3rd International Conference on Advancement in Electronics and Communication Engineering (AECE)', doi: '10.1109/aece59614.2023.10428292', c: 1 },
+  { id: 'C21', t: 'Deep and Transfer Learning-based Research Article Recommendation System for Healthcare Services', v: 'IEEE ICI', y: 2023, th: 'applied', au: 'C. Trivedi, F. Ramoliya, R. Gupta, R. Kakkar, S. Tanwar, S. Agrawal', at: '1–6', vf: 'Second International Conference on Informatics (ICI)', doi: '10.1109/ici60088.2023.10421143', c: 1 },
+  { id: 'C22', t: 'DL-Based Secure Wearable Scheme for Remote Patient Data Monitoring in Healthcare 4.0', v: 'IEEE ICCCIS', y: 2023, th: 'secure', first: true, au: 'F. Ramoliya, K. Darji, R. Gupta, R. Kakkar, S. Tanwar, A. Kumari', at: '757–762', vf: 'International Conference on Computing, Communication, and Intelligent Systems (ICCCIS)', doi: '10.1109/icccis60361.2023.10425096', c: 10 },
 ];
 
 export const research = {
@@ -334,33 +290,8 @@ export const research = {
     { value: '191', label: 'citations' },
     { value: '7', label: 'h-index' },
   ],
-  selected: [
-    {
-      title: 'F-Transformer: a federated transformer for efficient and privacy-preserving sequence generation',
-      venue: 'Scientific Reports',
-      year: '2026',
-      cites: 22,
-    },
-    {
-      title: 'Blockchain-assisted healthcare insurance fraud detection framework using ensemble learning',
-      venue: 'Computers and Electrical Engineering',
-      year: '2025',
-      cites: 36,
-    },
-    {
-      title: 'ML-based energy consumption and distribution framework analysis for EVs and charging stations in smart grid environment',
-      venue: 'IEEE Access',
-      year: '2024',
-      cites: 34,
-      first: true,
-    },
-    {
-      title: 'Explainable AI for gastrointestinal disease diagnosis in telesurgery Healthcare 4.0',
-      venue: 'Computers and Electrical Engineering',
-      year: '2024',
-      cites: 25,
-    },
-  ],
+  // the four most cited, newest first
+  selected: [...papers].sort((a, b) => (b.c ?? 0) - (a.c ?? 0)).slice(0, 4).sort((a, b) => b.y - a.y),
 };
 
 // newest first; from/to are fractional years (Jul 2026 = 2026.5), no `to` means it is still going

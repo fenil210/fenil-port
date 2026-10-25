@@ -1,0 +1,177 @@
+---
+import { getImage } from 'astro:assets';
+import Arrow from '../../components/Arrow.astro';
+import Base from '../../layouts/Base.astro';
+import { fmt, href, iso, mins, rendered, series } from '../../lib/articles';
+import { articleGraph } from '../../lib/schema';
+
+export async function getStaticPaths() {
+  const all = await rendered();
+  return all.map((a, i) => ({
+    params: { slug: a.id },
+    props: { a, newer: all[i - 1], older: all[i + 1], parts: all.filter((b) => b.data.series).sort((x, y) => +x.data.series! - +y.data.series!) },
+  }));
+}
+
+type A = Awaited<ReturnType<typeof rendered>>[number];
+interface Props {
+  a: A;
+  newer?: A;
+  older?: A;
+  parts: A[];
+}
+const { a, newer, older, parts } = Astro.props;
+const { Content, prose } = a;
+const { title, description, date, x, cover, coverAlt } = a.data;
+const path = href(a);
+// the name goes after the title when both fit in the 60 or so characters a result shows
+const head = `${title} · Fenil Ramoliya`.length <= 60 ? `${title} · Fenil Ramoliya` : title;
+const minutes = mins(prose.minutes);
+
+// the cover is what a share shows; the page itself opens on the text
+const og = await getImage({ src: cover, width: 1200, format: 'jpg', layout: 'none' });
+const image = { url: new URL(og.src, Astro.site).href, alt: coverAlt, width: Number(og.attributes.width), height: Number(og.attributes.height), type: 'image/jpeg' };
+
+const spans = prose.parts.map((p) => ({ id: p.id, name: p.name }));
+const toc = prose.parts.length > 1;
+const inSeries = a.data.series ? parts : [];
+// the articles either side, unless the series list already has them
+const around = [
+  { p: newer, label: 'Newer' },
+  { p: older, label: 'Older' },
+].filter((n): n is { p: A; label: string } => !!n.p && !inSeries.includes(n.p));
+---
+
+<Base
+  title={head}
+  description={description}
+  path={path}
+  image={image}
+  article={{ published: date }}
+  graph={articleGraph(Astro.site!, { title, description, path, date, x, image, words: prose.words })}
+  markdown={`/articles/${a.id}.md`}
+  spans={spans}
+  traceNo={String(prose.figures + 1)}
+  traceText={`This read as a trace. Each part of the article is a span, timed while it is on screen; the estimate was ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}. Nothing leaves this page.`}
+  here="articles"
+>
+  <main id="main">
+    <article class="wrap article" data-slug={a.id} data-minutes={prose.minutes}>
+      <header class="article-head">
+        <p class="article-kicker">
+          <a href="/articles/">Articles</a>
+          <time datetime={iso(date)}>{fmt(date)}</time>
+          {a.data.series && <span>{series}, {a.data.series}</span>}
+        </p>
+        <h1 class="article-title">{title}</h1>
+        <p class="article-meta">
+          By <a href="/" rel="author">Fenil Ramoliya</a> · {prose.words.toLocaleString('en-GB')} words · {minutes} min read · <a href={x}>First published on X</a> ·{' '}
+          <a href={`/articles/${a.id}.md`} type="text/markdown">Markdown</a>
+        </p>
+        <p class="resume" hidden><a href="#main"></a></p>
+      </header>
+
+      {
+        toc && (
+          <>
+            {/* the nav runs the height of the text, so the list inside it stops where the text does */}
+            <nav class="toc" aria-label="Contents">
+              <div class="toc-in">
+                <p class="label-inline">Contents</p>
+                <ol>
+                  {prose.parts.map((p) => (
+                    <li data-id={p.id} data-minutes={p.minutes}>
+                      <a href={`#${p.id}`}>
+                        <span class="toc-name">{p.name}</span>
+                        <span class="toc-min">{mins(p.minutes)} min</span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+                <p class="toc-left" aria-live="off" />
+              </div>
+            </nav>
+            <details class="toc-m">
+              <summary>
+                Contents <span>{prose.parts.length} parts</span>
+              </summary>
+              <ol>
+                {prose.parts.map((p) => (
+                  <li>
+                    <a href={`#${p.id}`}>
+                      <span class="toc-name">{p.name}</span>
+                      <span class="toc-min">{mins(p.minutes)} min</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          </>
+        )
+      }
+
+      <div class:list={['prose', !toc && 'no-toc']}>
+        <Content />
+      </div>
+
+      <footer class="article-end">
+        <div class="end-block">
+          <p class="label-inline">Replies</p>
+          <p class="end-x"><a href={x}>The replies to this article are on X, where it was first published</a></p>
+        </div>
+
+        {
+          inSeries.length > 0 && (
+            <div class="end-block">
+              <p class="label-inline">{series}</p>
+              <ol class="rows end-rows">
+                {inSeries.map((p) => (
+                  <li class:list={[p.id === a.id && 'is-current']}>
+                    {p.id === a.id ? (
+                      <span class="end-row" aria-current="page">
+                        <span class="row-year">{p.data.series}</span>
+                        <span class="row-name">{p.data.title}</span>
+                        <span class="row-year end-now">Reading now</span>
+                      </span>
+                    ) : (
+                      <a href={href(p)}>
+                        <span class="row-year">{p.data.series}</span>
+                        <span class="row-name">{p.data.title}</span>
+                        <span class="row-year">{mins(p.prose.minutes)} min</span>
+                        <Arrow />
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )
+        }
+
+        {
+          around.length > 0 && (
+            <div class="end-block">
+              <p class="label-inline">More articles</p>
+              <ol class="rows end-rows">
+                {around.map(({ p, label }) => (
+                  <li>
+                    <a href={href(p)}>
+                      <span class="row-year">{label}</span>
+                      <span class="row-name">{p.data.title}</span>
+                      <span class="row-year">{mins(p.prose.minutes)} min</span>
+                      <Arrow />
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )
+        }
+      </footer>
+    </article>
+  </main>
+
+  <script>
+    import '../../scripts/article';
+  </script>
+</Base>

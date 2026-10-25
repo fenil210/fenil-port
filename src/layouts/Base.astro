@@ -1,0 +1,162 @@
+---
+// Every page's frame: the head, the masthead and the colophon. A page passes what its head
+// says, and for the trace (Fig. 11 on the home page), the sections a visit moves through.
+import '@fontsource-variable/newsreader/opsz.css';
+import '@fontsource-variable/newsreader/opsz-italic.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '../styles/global.css';
+// no font preload: the serif is a 132 KB variable font, and preloading it pushed Lighthouse's
+// mobile LCP on the home page from about 1.8 s to 2.7 s, competing with the page itself
+
+import Trace from '../components/Trace.astro';
+import { hero, links } from '../lib/content';
+import { jsonLd } from '../lib/schema';
+
+export interface Span {
+  id: string;
+  name: string;
+}
+interface Props {
+  title: string;
+  description: string;
+  /** the page's path, which is also its canonical URL */
+  path: string;
+  /** the image shown when the page is shared; the site's card if not given */
+  image?: { url: string; alt: string; width: number; height: number; type?: string };
+  article?: { published: Date };
+  noindex?: boolean;
+  graph?: object;
+  /** a Markdown copy of the page, for agents */
+  markdown?: string;
+  /** the sections a visit is traced through, in page order */
+  spans?: Span[];
+  /** the trace's figure number; pages without one have no trace */
+  traceNo?: string;
+  traceText?: string;
+  /** the masthead link that points at this page */
+  here?: 'research' | 'articles';
+}
+
+const { title, description, path, image, article, noindex = false, graph, markdown, spans = [], traceNo, traceText, here } = Astro.props;
+const home = path === '/';
+const url = new URL(path, Astro.site);
+// what public/og.png shows, for readers who can't see it
+const card = {
+  url: new URL('/og.png', Astro.site).href,
+  alt: `Card reading “Fenil Ramoliya ${hero.title[1]}”, beside a line drawing of an orchestrator, sub-agents, tools and models.`,
+  width: 1200,
+  height: 630,
+  type: 'image/png',
+};
+const img = image ?? card;
+const at = (id: string, page: string) => (home ? `#${id}` : page);
+const nav = [
+  { href: at('work', '/#work'), name: 'Work' },
+  { href: at('research', '/research/'), name: 'Research', page: 'research' },
+  { href: at('projects', '/#projects'), name: 'Projects' },
+  { href: at('articles', '/articles/'), name: 'Articles', page: 'articles' },
+  { href: at('experience', '/#experience'), name: 'Experience' },
+  { href: at('travel', '/#travel'), name: 'Travel' },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Fenil Ramoliya" />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={url} />}
+    {markdown && <link rel="alternate" type="text/markdown" href={markdown} title="This page as Markdown" />}
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    {
+      !noindex && (
+        <>
+          <meta property="og:type" content={article ? 'article' : 'website'} />
+          <meta property="og:site_name" content="Fenil Ramoliya" />
+          <meta property="og:locale" content="en_GB" />
+          <meta property="og:title" content={title} />
+          <meta property="og:description" content={description} />
+          <meta property="og:url" content={url} />
+          <meta property="og:image" content={img.url} />
+          {img.type && <meta property="og:image:type" content={img.type} />}
+          <meta property="og:image:width" content={String(img.width)} />
+          <meta property="og:image:height" content={String(img.height)} />
+          <meta property="og:image:alt" content={img.alt} />
+          {article && <meta property="article:published_time" content={article.published.toISOString()} />}
+          {article && <meta property="article:author" content={Astro.site} />}
+          <slot name="head" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:site" content="@fenillramoliya" />
+          <meta name="twitter:creator" content="@fenillramoliya" />
+          <meta name="twitter:image" content={img.url} />
+          <meta name="twitter:image:alt" content={img.alt} />
+        </>
+      )
+    }
+    <meta name="theme-color" content="#0f0f0e" />
+    {graph && <script type="application/ld+json" set:html={jsonLd(graph)} />}
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      try {
+        const t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+        if (t === 'light') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f6f3');
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="masthead">
+      <div class="wrap masthead-row">
+        {
+          home ? (
+            <a class="wordmark" href="#top" aria-label="Fenil Ramoliya, back to top">Fenil Ramoliya</a>
+          ) : (
+            <a class="wordmark" href="/">Fenil Ramoliya</a>
+          )
+        }
+        <nav aria-label={home ? 'Sections' : 'Site'}>
+          <ul>
+            {
+              nav.map((n) => (
+                <li>
+                  <a href={n.href} class:list={[here && n.page === here && 'is-current']} aria-current={here && n.page === here ? 'page' : undefined}>
+                    {n.name}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+        <a class="btn btn-sm btn-ghost" href={`mailto:${links.email}`}>Email</a>
+        <button class="theme" type="button" aria-label="Switch colour theme">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"></circle><path d="M10 2.75a7.25 7.25 0 0 1 0 14.5z"></path></svg>
+        </button>
+      </div>
+      {spans.length > 0 && <ol class="spans" aria-hidden="true">{spans.map((s) => <li data-id={s.id} />)}</ol>}
+    </header>
+
+    <slot />
+
+    <footer class="wrap colophon">
+      {traceNo && <Trace no={traceNo} spans={spans} text={traceText} />}
+      <p class="colophon-copy">© 2026 Fenil Ramoliya</p>
+      <p class="colophon-credits">
+        Set in Newsreader and IBM Plex Mono. Figures are drawn by a small axonometric renderer written for this site, maps with
+        d3-geo from <a href="https://www.naturalearthdata.com">Natural Earth</a> and <a href="https://github.com/datameet/maps">DataMeet</a>{' '}
+        data (CC BY 4.0). Built with Astro and Bun.
+      </p>
+    </footer>
+
+    <script>
+      import '../scripts/chrome';
+    </script>
+  </body>
+</html>

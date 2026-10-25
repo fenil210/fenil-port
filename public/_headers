@@ -3,21 +3,25 @@
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Markdown copies of the home page are for agents; search engines should list the page itself
+# Markdown copies of the pages are for agents; search engines should list the pages themselves
 /index.md
   X-Robots-Tag: noindex
 /llms-full.txt
+  X-Robots-Tag: noindex
+/research.md
+  X-Robots-Tag: noindex
+/articles/*.md
   X-Robots-Tag: noindex
 
 # Security headers for every response. /og.mp4 goes through worker/index.ts, which gets
 # these from the assets binding and keeps them by copying the asset's headers.
 # The CSP only reports for now; switch the name to Content-Security-Policy once the console is clean.
-# The two hashes are the inline theme scripts in index.astro and 404.astro: edit either script and
-# its hash changes (the browser's CSP report gives the new one). The cloudflareinsights hosts are
+# The hash is the inline theme script in layouts/Base.astro, the same on every page: edit the script
+# and its hash changes (the browser's CSP report gives the new one). The cloudflareinsights hosts are
 # for Cloudflare Web Analytics and can go once it is turned off.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   X-Frame-Options: DENY
-  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'sha256-zcFKJ8vp64i5FHOEB+ewYf+HqKKEURKT7t+XmiNtqzU=' 'sha256-HgQSSPEzRQrzAuua5usa+aclaZbNAsQ7IEMp5LzNQjg=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'sha256-zcFKJ8vp64i5FHOEB+ewYf+HqKKEURKT7t+XmiNtqzU=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'

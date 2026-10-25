@@ -1,0 +1,55 @@
+---
+// Every paper by theme and year. On the home page a mark reads its paper out under the grid;
+// on /research/ it also links to the paper's entry in the list below.
+import { papers, themes, years } from '../lib/content';
+
+interface Props {
+  no: string;
+  link?: boolean;
+}
+const { no, link = false } = Astro.props;
+const Mark = link ? 'a' : 'button';
+---
+
+<figure class="fig matrix" id={`fig-${no}`} aria-label={`Figure ${no}, all ${papers.length} papers by theme and year`}>
+  <div class="matrix-grid" role="group" aria-label={`All ${papers.length} papers by theme and year`}>
+    <span class="matrix-corner" aria-hidden="true"></span>
+    {/* the spaces render nothing in the grid, but keep the years apart for readers of raw HTML */}
+    {years.map((y) => <>{' '}<span class="matrix-year" aria-hidden="true">{y}</span></>)}
+    {
+      themes.map((th) => (
+        <>
+          <span class="matrix-theme">
+            {th.name}{' '}
+            <span class="matrix-count">{papers.filter((p) => p.th === th.id).length}</span>
+          </span>
+          {years.map((y) => (
+            <span class="matrix-cell">
+              {papers
+                .filter((p) => p.th === th.id && p.y === y)
+                .sort((a, b) => Number(!!b.j) - Number(!!a.j))
+                .map((p) => (
+                  <Mark
+                    type={link ? undefined : 'button'}
+                    href={link ? `#${p.id}` : undefined}
+                    class:list={['mark', p.j && 'journal']}
+                    data-title={p.t}
+                    data-meta={`${p.v}, ${p.y}${p.j ? ' · journal article' : ''}${p.first ? ' · first author' : ''}`}
+                    aria-label={`${p.t}. ${p.v}, ${p.y}.`}
+                  />
+                ))}
+            </span>
+          ))}
+        </>
+      ))
+    }
+  </div>
+  <figcaption>
+    <span class="fig-no" aria-hidden="true">Fig. {no}</span>{' '}
+    <span class="matrix-readout" aria-live="polite">
+      <span class="readout-default"><span class="key key-j"></span> Journal article <span class="key"></span> Conference paper</span>
+      <span class="readout-title"></span>
+      <span class="readout-meta"></span>
+    </span>
+  </figcaption>
+</figure>

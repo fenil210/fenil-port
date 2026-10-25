@@ -1,49 +1,9 @@
 import { cmdToString, render, type Cmd, type Frame } from '../lib/axo';
 import { figures, type FigureName } from '../lib/scenes';
 import { initGlobe } from './globe';
-import { initTrace } from './trace';
+import { initMatrix } from './matrix';
 
-const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/* ───────── theme ───────── */
-
-const themeBtn = document.querySelector<HTMLButtonElement>('.theme');
-themeBtn?.addEventListener('click', () => {
-  const next = root.dataset.theme === 'light' ? 'dark' : 'light';
-  const apply = () => {
-    root.dataset.theme = next;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'light' ? '#f6f6f3' : '#0f0f0e');
-    try {
-      localStorage.setItem('theme', next);
-    } catch {}
-  };
-  const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
-  if (doc.startViewTransition && !reduced) doc.startViewTransition(apply);
-  else apply();
-});
-
-/* ───────── masthead ───────── */
-
-const masthead = document.querySelector<HTMLElement>('.masthead');
-const navLinks = [...document.querySelectorAll<HTMLAnchorElement>('.masthead nav a')];
-
-const onScroll = () => masthead?.classList.toggle('is-scrolled', scrollY > 8);
-// the bottom edge of the masthead is the trace of this visit, one span per section (see trace.ts)
-addEventListener('scroll', onScroll, { passive: true });
-onScroll();
-
-const sectionIO = new IntersectionObserver(
-  (entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      const id = (e.target as HTMLElement).id;
-      navLinks.forEach((a) => a.classList.toggle('is-current', a.hash === `#${id}`));
-    }
-  },
-  { rootMargin: '-50% 0px -50% 0px' },
-);
-document.querySelectorAll('main > section[id]').forEach((s) => sectionIO.observe(s));
 
 /* ───────── figures ───────── */
 
@@ -407,47 +367,7 @@ place();
 
 /* ───────── fig. 7: paper matrix ───────── */
 
-const matrix = document.querySelector<HTMLElement>('.matrix');
-if (matrix) {
-  const marks = [...matrix.querySelectorAll<HTMLButtonElement>('.mark')];
-  const readout = matrix.querySelector<HTMLElement>('.matrix-readout')!;
-  const title = readout.querySelector<HTMLElement>('.readout-title')!;
-  const meta = readout.querySelector<HTMLElement>('.readout-meta')!;
-
-  const show = (m: HTMLButtonElement | null) => {
-    marks.forEach((x) => x.classList.toggle('is-on', x === m));
-    readout.classList.toggle('is-on', !!m);
-    if (!m) return;
-    title.textContent = m.dataset.title ?? '';
-    meta.textContent = m.dataset.meta ?? '';
-  };
-  marks.forEach((m) => {
-    m.addEventListener('pointerenter', () => show(m));
-    m.addEventListener('focus', () => show(m));
-    m.addEventListener('click', () => show(m));
-  });
-  matrix.querySelector('.matrix-grid')?.addEventListener('pointerleave', () => show(null));
-  matrix.addEventListener('focusout', (e) => {
-    if (!matrix.contains((e as FocusEvent).relatedTarget as Node)) show(null);
-  });
-
-  if (!reduced) {
-    // reveal column by column, the way the papers accumulated
-    const order = [...marks].sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left);
-    order.forEach((m, i) => m.style.setProperty('--i', String(i)));
-    matrix.classList.add('pre');
-    new IntersectionObserver(
-      ([e], io) => {
-        if (!e.isIntersecting) return;
-        matrix.classList.add('drawing');
-        requestAnimationFrame(() => matrix.classList.remove('pre'));
-        setTimeout(() => matrix.classList.remove('drawing'), marks.length * 35 + 700);
-        io.disconnect();
-      },
-      { threshold: 0.3 },
-    ).observe(matrix);
-  }
-}
+initMatrix(reduced);
 
 /* ───────── fig. 8: experience on a year scale ───────── */
 
@@ -478,48 +398,6 @@ if (chart) {
 /* ───────── fig. 9 and 10: travel ───────── */
 
 initGlobe(reduced);
-
-/* ───────── fig. 11: this visit as a trace ───────── */
-
-initTrace();
-
-/* ───────── reveal ───────── */
-
-if (!reduced) {
-  const revealIO = new IntersectionObserver(
-    (entries, io) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        e.target.classList.add('in');
-        io.unobserve(e.target);
-      }
-    },
-    { rootMargin: '0px 0px -8% 0px' },
-  );
-  const groups = ['.section-head', '.rows li', '.papers li', '.recognition li', '.stats > div', '.contact-links li'];
-  document.querySelectorAll<HTMLElement>(groups.join(',')).forEach((el) => {
-    const i = el.parentElement ? [...el.parentElement.children].indexOf(el) : 0;
-    el.style.transitionDelay = `${Math.min(i, 8) * 60}ms`;
-    el.classList.add('reveal');
-    revealIO.observe(el);
-  });
-}
-
-/* ───────── rules grow out from where the pointer enters ───────── */
-
-document.querySelectorAll<HTMLElement>('.rows a, .contact-links a').forEach((a) => {
-  a.addEventListener('pointerenter', (e) => {
-    const r = a.getBoundingClientRect();
-    a.style.setProperty('--ox', `${Math.round(e.clientX - r.left)}px`);
-  });
-});
-
-document.querySelectorAll<HTMLElement>('.hero-links a:not(.btn), .masthead nav a, .more a').forEach((a) => {
-  a.addEventListener('pointerenter', (e) => {
-    const r = a.getBoundingClientRect();
-    a.style.setProperty('--oxp', `${Math.round(((e.clientX - r.left) / r.width) * 100)}%`);
-  });
-});
 
 /* ───────── local time ───────── */
 

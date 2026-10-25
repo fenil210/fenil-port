@@ -1,5 +1,6 @@
-// Fig. 11 and the masthead's bottom edge: this visit as a trace. Each section is a span
-// that runs while it is the one being read; a hidden tab pauses it. Nothing leaves the page.
+// The trace figure in the colophon and the masthead's bottom edge: this visit as a trace. Each
+// section is a span that runs while it is the one being read; a hidden tab pauses it. Nothing
+// leaves the page.
 
 type Seg = [start: number, end: number | null];
 
@@ -18,6 +19,8 @@ export function initTrace() {
   const rows = [...document.querySelectorAll<HTMLElement>('.trace .span[data-id]')];
   const sections = rows.map((r) => document.getElementById(r.dataset.id!)).filter((s): s is HTMLElement => !!s);
   if (!fig || !sections.length) return;
+  // an article's contents list follows along like the edge does
+  const followers = sections.map((s) => [...document.querySelectorAll<HTMLElement>(`.spans li[data-id="${s.id}"], .toc li[data-id="${s.id}"]`)]);
 
   const axis = fig.querySelector<HTMLElement>('.trace-axis')!;
   const rootDur = fig.querySelector<HTMLElement>('.root .span-dur')!;
@@ -52,8 +55,11 @@ export function initTrace() {
     sections.forEach((s, i) => {
       const r = s.getBoundingClientRect();
       if (r.top <= y && r.bottom > y) here = s.id;
-      edge[i]?.style.setProperty('--p', Math.max(0, Math.min(1, (y - r.top) / r.height)).toFixed(4));
-      edge[i]?.classList.toggle('is-here', here === s.id);
+      const p = Math.max(0, Math.min(1, (y - r.top) / r.height)).toFixed(4);
+      followers[i].forEach((el) => {
+        el.style.setProperty('--p', p);
+        el.classList.toggle('is-here', here === s.id);
+      });
     });
     read(here);
   };

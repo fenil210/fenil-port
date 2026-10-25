@@ -1,0 +1,120 @@
+---
+import Matrix from '../components/Matrix.astro';
+import Base from '../layouts/Base.astro';
+import { fmt } from '../lib/articles';
+import { bibtex, doiUrl, venue } from '../lib/cite';
+import { citedOn, links, papers, research, themes, years } from '../lib/content';
+import { researchGraph } from '../lib/schema';
+
+const description = `All ${papers.length} peer-reviewed papers by Fenil Ramoliya, 2023 to 2026, on federated learning, explainable AI and security for connected systems, with DOIs.`;
+const ME = 'F. Ramoliya';
+const groups = [...years].reverse().map((y) => ({ y, list: papers.filter((p) => p.y === y) }));
+const theme = Object.fromEntries(themes.map((t) => [t.id, t.name]));
+const asOf = fmt(new Date(citedOn));
+// a visit is traced through the years, newest first
+const spans = [{ id: 'top', name: 'Overview' }, ...groups.map((g) => ({ id: `y${g.y}`, name: String(g.y) }))];
+---
+
+<Base
+  title="Research · Fenil Ramoliya"
+  description={description}
+  path="/research/"
+  graph={researchGraph(Astro.site!, description)}
+  markdown="/research.md"
+  spans={spans}
+  traceNo="2"
+  here="research"
+>
+  <main id="main">
+    <section class="wrap page-head" id="top">
+      <h1 class="display">Research</h1>
+      <p class="lede">
+        Twenty-eight peer-reviewed papers from 2023 to 2026, six of them in journals, on federated learning and privacy, explainable AI,
+        security for connected systems, and applied deep learning. Each title links to the paper by its DOI.
+      </p>
+
+      <dl class="stats">
+        {
+          research.stats.map((s) => (
+            <div>
+              <dt>{s.value}</dt>
+              <dd>{s.label}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <p class="stats-note">Citations and h-index from <a href={links.scholar}>Google Scholar</a>, {asOf}.</p>
+
+      <Matrix no="1" link />
+    </section>
+
+    <div class="wrap filters" data-filters hidden>
+      <p class="label-inline" id="filter-label">Show</p>
+      <div class="filter-set" role="group" aria-labelledby="filter-label">
+        <button type="button" class="chip" data-th="" aria-pressed="true">All <span>{papers.length}</span></button>
+        {
+          themes.map((t) => (
+            <button type="button" class="chip" data-th={t.id} aria-pressed="false">
+              {t.name} <span>{papers.filter((p) => p.th === t.id).length}</span>
+            </button>
+          ))
+        }
+        <button type="button" class="chip" data-first aria-pressed="false">First author <span>{papers.filter((p) => p.first).length}</span></button>
+      </div>
+      <p class="filter-count" aria-live="polite"></p>
+    </div>
+
+    {
+      groups.map((g) => (
+        <section class="section wrap paper-year" id={`y${g.y}`} aria-labelledby={`h${g.y}`}>
+          <h2 class="year-head" id={`h${g.y}`}>
+            {g.y}{' '}<span class="year-count">{g.list.length} {g.list.length === 1 ? 'paper' : 'papers'}</span>
+          </h2>
+          <ol class="paper-list">
+            {g.list.map((p) => (
+              <li class="paper" id={p.id} data-th={p.th} data-first={p.first ? '' : undefined}>
+                <span class="ref" aria-hidden="true">{p.id}</span>
+                <div class="paper-body">
+                  <h3 class="paper-name">
+                    <a href={doiUrl(p)}>{p.t}</a>
+                  </h3>
+                  <p class="paper-authors">
+                    {p.au.split(', ').map((a, i) => (
+                      <>
+                        {i > 0 && ', '}
+                        {a === ME ? <strong>{a}</strong> : a}
+                      </>
+                    ))}
+                  </p>
+                  <p class="paper-venue">{venue(p)}</p>
+                  <p class="paper-meta">
+                    {theme[p.th]} · {p.j ? 'Journal article' : 'Conference paper'}
+                    {p.first && ' · First author'} · <span class="doi">DOI {p.doi}</span>
+                  </p>
+                  <details class="cite">
+                    <summary>Cite</summary>
+                    <pre>{bibtex(p)}</pre>
+                    <button type="button" class="copy" hidden>Copy BibTeX</button>
+                  </details>
+                </div>
+                <p class="paper-cites">
+                  {p.c === undefined ? (
+                    'Not on Scholar'
+                  ) : (
+                    <>
+                      <b>{p.c}</b> <span>{p.c === 1 ? 'citation' : 'citations'}</span>
+                    </>
+                  )}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))
+    }
+  </main>
+
+  <script>
+    import '../scripts/research';
+  </script>
+</Base>
