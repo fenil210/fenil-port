@@ -9,6 +9,7 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const whole = await env.ASSETS.fetch(request);
     if (whole.status !== 200) return whole;
+    // copied, not rebuilt: this carries the security headers from public/_headers
     const headers = new Headers(whole.headers);
     headers.set('accept-ranges', 'bytes');
     const asked = request.headers.get('range')?.match(/^bytes=(\d*)-(\d*)$/);
