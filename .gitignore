@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .astro/
+.wrangler/
 .DS_Store
 # project skills and plugin settings are shared; anything else in .claude stays local
 .claude/*
