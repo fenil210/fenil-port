@@ -10,7 +10,8 @@ import Figure from '../components/Figure.astro';
 import IndiaMap from '../components/IndiaMap.astro';
 import { atlas } from '../lib/atlas';
 import { drawGlobe, SIZE, VIEW } from '../lib/globe';
-import { hero, links, papers, path, principles, projects, recognition, research, systems, themes, travel, writing, years } from '../lib/content';
+import { contact, hero, links, meta, papers, path, principles, projects, recognition, research, systems, themes, travel, writing, years } from '../lib/content';
+import { graph, jsonLd } from '../lib/schema';
 
 const fmt = (iso: string) =>
   new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
@@ -31,9 +32,7 @@ const ticks = scale.flatMap((y) => {
 // a riser joins each job to the one before it
 const prev = (i: number) => (path[i].kind === 'job' && path[i + 1]?.kind === 'job' ? path[i + 1] : undefined);
 
-const title = 'Fenil Ramoliya · Software Engineer, AI';
-const description =
-  'Fenil Ramoliya builds AI agents and the systems they run on: harnesses and runtimes, tools and protocols, and the infrastructure that keeps them fast, affordable and correct under real traffic.';
+const { title, description } = meta;
 // what public/og.png shows, for readers who can't see it
 const ogAlt = `Card reading “Fenil Ramoliya ${hero.title[1]}”, beside a line drawing of an orchestrator, sub-agents, tools and models.`;
 // a visit is traced through these, in page order: Fig. 11 and the masthead's bottom edge
@@ -90,6 +89,7 @@ const nav = [
     <meta name="twitter:creator" content="@fenillramoliya" />
     <meta name="twitter:image:alt" content={ogAlt} />
     <meta name="theme-color" content="#0f0f0e" />
+    <script type="application/ld+json" set:html={jsonLd(graph(Astro.site!))} />
     <script is:inline>
       document.documentElement.classList.add('js');
       try {
@@ -341,7 +341,7 @@ const nav = [
 
       <section class="section wrap" id="travel">
         <h2 class="section-head">Elsewhere</h2>
-        <p class="section-dek">A travel geek away from work: always planning the next trip, and wandering off the plan once I get there.</p>
+        <p class="section-dek">{travel.dek}</p>
 
         <dl class="stats">
           <div><dt>{travel.countries.length}</dt><dd>countries abroad</dd></div>
@@ -402,8 +402,8 @@ const nav = [
           <a href={`mailto:${links.email}`}>{links.email.split('@')[0]}<wbr />@{links.email.split('@')[1]}</a>
         </h2>
         <p class="intro">
-          Write if you are building with agents, running LLMs in production, or want to talk about research.{' '}
-          <span class="clock" data-tz="Asia/Kolkata">I live in Mumbai, on IST.</span>
+          {contact.intro}{' '}
+          <span class="clock" data-tz="Asia/Kolkata">{contact.home}</span>
         </p>
         <ul class="contact-links">
           <li><a href={links.github} rel="me">GitHub</a></li>

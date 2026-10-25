@@ -11,6 +11,18 @@ export const links = {
   scholar: 'https://scholar.google.com/citations?user=WZt_Xe8AAAAJ&hl=en',
 };
 
+// the page's title and description, shared by the HTML head, the structured data and llms.txt
+export const meta = {
+  title: 'Fenil Ramoliya · Software Engineer, AI',
+  description:
+    'Fenil Ramoliya builds AI agents and the systems they run on: harnesses and runtimes, tools and protocols, and the infrastructure that keeps them fast, affordable and correct under real traffic.',
+};
+
+export const contact = {
+  intro: 'Write if you are building with agents, running LLMs in production, or want to talk about research.',
+  home: 'I live in Mumbai, on IST.',
+};
+
 export type Legend = [string, string][];
 
 export const hero = {
@@ -364,6 +376,7 @@ export const path: Stint[] = [
 
 // in the order travelled; id is the ISO 3166 numeric code
 export const travel = {
+  dek: 'A travel geek away from work: always planning the next trip, and wandering off the plan once I get there.',
   countries: [
     { id: '231', name: 'Ethiopia', tz: 'Africa/Addis_Ababa' },
     { id: '710', name: 'South Africa', tz: 'Africa/Johannesburg' },
@@ -393,10 +406,11 @@ export const travel = {
   ],
 };
 
-export const recognition = [
-  { what: 'Rising Star of the Year', where: 'Cactus Communications, FY 2025–26' },
-  { what: 'Overall first prize, MINeD’24', where: 'and second in the Cactus Communications track, for AiReS' },
-  { what: 'IEEE ComSoc student travel grants', where: 'IEEE ICC 2024, Denver · IEEE GLOBECOM 2024, Cape Town' },
+// award marks the entries the structured data lists as awards
+export const recognition: { what: string; where: string; award?: true }[] = [
+  { what: 'Rising Star of the Year', where: 'Cactus Communications, FY 2025–26', award: true },
+  { what: 'Overall first prize, MINeD’24', where: 'and second in the Cactus Communications track, for AiReS', award: true },
+  { what: 'IEEE ComSoc student travel grants', where: 'IEEE ICC 2024, Denver · IEEE GLOBECOM 2024, Cape Town', award: true },
   { what: 'Co-host, OpenAI Codex community events', where: 'Developer meetup and hackathon, Mumbai, 2026' },
   { what: 'Mentor and judge', where: 'HackaMINeD 2025 and 2026' },
   { what: 'Reviewer', where: 'IEEE Access, IEEE GLOBECOM 2023 and 2024' },
