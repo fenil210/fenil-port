@@ -1,0 +1,46 @@
+---
+import '@fontsource-variable/newsreader/opsz.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '../styles/global.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page not found · Fenil Ramoliya</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#0f0f0e" />
+    <script is:inline>
+      try {
+        if (localStorage.getItem('theme') === 'light') document.documentElement.dataset.theme = 'light';
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <main class="wrap missing">
+      <p class="fig-no">404</p>
+      <h1 class="display">Page not found</h1>
+      <p class="lede">There is nothing at this address. Everything on this site is on one page.</p>
+      <p><a class="btn" href="/">Go to fenilramoliya.com</a></p>
+    </main>
+  </body>
+</html>
+
+<style>
+  .missing {
+    min-height: 100vh;
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    gap: var(--s3);
+  }
+
+  .missing .display,
+  .missing .lede {
+    margin: 0;
+  }
+</style>

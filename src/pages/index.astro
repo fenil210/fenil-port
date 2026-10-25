@@ -34,6 +34,8 @@ const prev = (i: number) => (path[i].kind === 'job' && path[i + 1]?.kind === 'jo
 const title = 'Fenil Ramoliya · Software Engineer, AI';
 const description =
   'Fenil Ramoliya builds AI agents and the systems they run on: harnesses and runtimes, tools and protocols, and the infrastructure that keeps them fast, affordable and correct under real traffic.';
+// what public/og.png shows, for readers who can't see it
+const ogAlt = `Card reading “Fenil Ramoliya ${hero.title[1]}”, beside a line drawing of an orchestrator, sub-agents, tools and models.`;
 // a visit is traced through these, in page order: Fig. 11 and the masthead's bottom edge
 const spans = [
   { id: 'top', name: 'Introduction' },
@@ -64,14 +66,19 @@ const nav = [
     <meta name="description" content={description} />
     <meta name="author" content="Fenil Ramoliya" />
     <link rel="canonical" href={Astro.site} />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Fenil Ramoliya" />
+    <meta property="og:locale" content="en_GB" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={Astro.site} />
     <meta property="og:image" content={new URL('/og.png', Astro.site)} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogAlt} />
     <!-- iMessage plays this in the link preview; everything else shows the image -->
     <meta property="og:video" content={new URL('/og.mp4', Astro.site)} />
     <meta property="og:video:secure_url" content={new URL('/og.mp4', Astro.site)} />
@@ -80,6 +87,8 @@ const nav = [
     <meta property="og:video:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@fenillramoliya" />
+    <meta name="twitter:creator" content="@fenillramoliya" />
+    <meta name="twitter:image:alt" content={ogAlt} />
     <meta name="theme-color" content="#0f0f0e" />
     <script is:inline>
       document.documentElement.classList.add('js');
@@ -112,7 +121,8 @@ const nav = [
     <main id="main">
       <section class="hero wrap" id="top">
         <div class="hero-copy">
-          <h1 class="display">{hero.title.map((t) => <span>{t}</span>)}</h1>
+          <!-- the space keeps the two lines one sentence for crawlers that ignore CSS -->
+          <h1 class="display">{hero.title.map((t) => <><span>{t}</span>{' '}</>)}</h1>
           <p class="lede">{hero.lede}</p>
           <ul class="hero-links">
             <li><a class="btn" href={`mailto:${links.email}`}>Write to me</a></li>

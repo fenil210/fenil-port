@@ -4,7 +4,7 @@
   "name": "fenil-ramoliya",
   "main": "./worker/index.ts",
   "compatibility_date": "2026-09-01",
-  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/og.mp4"] },
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/og.mp4"], "not_found_handling": "404-page" },
   // copied from the dashboard as is, so a deploy from here changes nothing there
   "observability": {
     "enabled": false,
