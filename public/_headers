@@ -2,3 +2,9 @@
 # so a changed file is a new URL and the old one can be cached for good.
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Markdown copies of the home page are for agents; search engines should list the page itself
+/index.md
+  X-Robots-Tag: noindex
+/llms-full.txt
+  X-Robots-Tag: noindex
