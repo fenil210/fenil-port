@@ -302,7 +302,7 @@ export const path: Stint[] = [
   { role: 'Machine Learning Intern', where: 'Cactus Labs, Applied AI', when: 'Jan – Jun 2025', from: 2025, to: 2025.5, kind: 'job' },
   { role: 'Backend ML Intern', where: 'Cactus Labs and Paperpal', when: 'May – Jul 2024', from: 2024 + 4 / 12, to: 2024 + 7 / 12, kind: 'job' },
   { role: 'Research', where: '28 peer-reviewed papers', when: '2023 – 2026', from: 2023, to: 2027, kind: 'pubs' },
-  { role: 'B.Tech, Computer Science and Engineering', where: 'Nirma University · CGPI 9.09 of 10', when: '2021 – 2025', from: 2021 + 7 / 12, to: 2025 + 5 / 12, kind: 'study' },
+  { role: 'B.Tech, Computer Science and Engineering', where: 'Nirma University', when: '2021 – 2025', from: 2021 + 7 / 12, to: 2025 + 5 / 12, kind: 'study' },
 ];
 
 // in the order travelled; id is the ISO 3166 numeric code
