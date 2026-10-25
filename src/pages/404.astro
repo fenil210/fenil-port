@@ -24,8 +24,11 @@ import '../styles/global.css';
     <main class="wrap missing">
       <p class="fig-no">404</p>
       <h1 class="display">Page not found</h1>
-      <p class="lede">There is nothing at this address. Everything on this site is on one page.</p>
-      <p><a class="btn" href="/">Go to fenilramoliya.com</a></p>
+      <p class="lede">There is nothing at this address. If an AI assistant gave you this link, it probably made it up.</p>
+      <ul class="hero-links">
+        <li><a class="btn" href="/">Go to fenilramoliya.com</a></li>
+        <li class="for-agents">For agents: <a href="/llms.txt">/llms.txt</a></li>
+      </ul>
     </main>
   </body>
 </html>
@@ -42,5 +45,9 @@ import '../styles/global.css';
   .missing .display,
   .missing .lede {
     margin: 0;
+  }
+
+  .for-agents {
+    color: var(--ink-2);
   }
 </style>
