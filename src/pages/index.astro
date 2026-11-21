@@ -9,6 +9,8 @@ import { atlas } from '../lib/atlas';
 import { drawGlobe, SIZE, VIEW } from '../lib/globe';
 import { bio, contact, hero, links, meta, papers, path, principles, projects, recognition, research, systems, travel } from '../lib/content';
 import { graph } from '../lib/schema';
+import { optNames } from '../scripts/descent';
+import { GLYPH, LABEL } from '../scripts/race';
 
 const writing = await articles();
 
@@ -52,7 +54,8 @@ const spans = [
   </Fragment>
 
     <main id="main">
-      <section class="hero wrap" id="top">
+      <section class="hero" id="top">
+        <div class="wrap hero-grid">
         <div class="hero-copy">
           <!-- the space keeps the two lines one sentence for crawlers that ignore CSS -->
           <h1 class="display">{hero.title.map((t) => <><span>{t}</span>{' '}</>)}</h1>
@@ -65,13 +68,21 @@ const spans = [
             <li><a href={links.x} rel="me">X</a></li>
           </ul>
         </div>
-        <Figure name="hero" no="1" title="an agent system" legend={hero.legend} live class="hero-fig" />
-        <div class="field" role="img" aria-label="The sinusoidal positional encoding from Attention Is All You Need (2017), drawn in ASCII." data-nosnippet>
-          <div class="field-grid" aria-hidden="true"><pre class="field-base"></pre><pre class="field-lens"></pre></div>
-          <p class="field-cap" aria-hidden="true">
-            <span>PE(pos, 2i) = sin(pos / 10000<sup>2i/d</sup>)</span>
-            <span>Attention Is All You Need, 2017</span>
-          </p>
+        <figure class="race" id="fig-1" aria-label="Figure 1: SGD, Momentum, RMSProp and Adam descending a loss surface drawn in its own loss values.">
+          <div class="race-art" data-nosnippet><canvas class="race-glow" aria-hidden="true"></canvas><canvas class="race-sharp" aria-hidden="true"></canvas></div>
+          <figcaption>
+            <span class="fig-no" aria-hidden="true">Fig. 1</span>{' '}
+            <span class="race-head"><span class="race-name">Rosenbrock function</span> <span class="race-step"></span></span>{' '}
+            <ol class="race-legend">
+              {optNames.map((n) => (
+                <li data-opt={n}>
+                  <span class="race-glyph" aria-hidden="true">{GLYPH[n]}</span> {LABEL[n]} <span class="race-loss"></span>
+                </li>
+              ))}
+            </ol>
+            <p class="race-key">Each digit is the loss at that point. Click the surface to start a run from there.</p>
+          </figcaption>
+        </figure>
         </div>
       </section>
 

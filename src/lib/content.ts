@@ -33,15 +33,6 @@ export const hero = {
   title: ['Fenil Ramoliya', 'builds AI agents and the systems they run on.'],
   lede:
     'I work on every layer of that: the harness and runtime around the model, the tools and protocols agents act through, and the infrastructure that keeps them fast, affordable and correct under real traffic. I do it at Cactus Communications, mostly on Paperpal, for an academic world I first knew as a researcher.',
-  legend: [
-    ['10', 'Orchestrator'],
-    ['12', 'Sub-agents'],
-    ['20', 'Tool layer'],
-    ['22', 'Retrieval index'],
-    ['30', 'Compute'],
-    ['40', 'Request'],
-    ['50', 'Model'],
-  ] as Legend,
 };
 
 export interface System {

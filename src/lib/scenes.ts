@@ -78,118 +78,6 @@ function guides(half: number, z0: number, z1: number, cx = 0, cy = 0): Group {
 
 const acc = (tag: string, comet?: number): Style => ({ stroke: 'accent', tag, comet, w: 1.2 });
 
-/* ───────────────────────── FIG. 1 · hero ───────────────────────── */
-
-const hero: FigureDef = {
-  cam: { yaw: 36, pitch: 27 },
-  build(cam) {
-    const P = 8.4;
-    const H = P / 2;
-    const zI = 0,
-      zT = 3.4,
-      zA = 6.8,
-      zD = 10.4;
-    const C = 2.775; // grid pitch shared by pods, tools and agents so the request path runs straight
-    const rnd = rng(11);
-
-    // infrastructure: a plate of pods
-    const infra: Group[] = [];
-    for (const x of [-C, -C / 3, C / 3, C])
-      for (const y of [-C, -C / 3, C / 3, C]) {
-        const h = 0.3 + rnd() * 0.75;
-        const onPath = x === -C && y === -C;
-        infra.push(box([x - 0.65, y - 0.65, zI + T], [1.3, 1.3, onPath ? 0.95 : h], { tag: '30', fill: onPath ? 'tint' : 'paper' }));
-      }
-
-    // tools
-    const tools: Group[] = [];
-    tools.push(cylinder([-C, -C, zT + T], 1.0, 1.2, { tag: '20 22', fill: 'tint' }, cam));
-    // citation cards
-    for (let i = 0; i < 4; i++) {
-      tools.push(
-        box([C - 1.2 + i * 0.12, -C - 0.9 - i * 0.1, zT + T + i * 0.2], [2.2, 1.6, 0.05], { tag: '20 24' }, i === 3
-          ? [
-              line([[C - 0.75, -C + 0.35, zT + T + 0.67], [C - 0.95, -C + 0.35, zT + T + 0.67], [C - 0.95, -C - 0.45, zT + T + 0.67], [C - 0.75, -C - 0.45, zT + T + 0.67]], { stroke: 'ink', tag: '20 24' }),
-              line([[C + 0.45, -C + 0.35, zT + T + 0.67], [C + 0.65, -C + 0.35, zT + T + 0.67], [C + 0.65, -C - 0.45, zT + T + 0.67], [C + 0.45, -C - 0.45, zT + T + 0.67]], { stroke: 'ink', tag: '20 24' }),
-              ...textLines([C - 0.6, -C + 0.2, zT + T + 0.67], 0.9, 3, 0.28, 3, { stroke: 'muted', w: 0.8, tag: '20 24' }),
-            ]
-          : []),
-      );
-    }
-    // checks engine with slots
-    tools.push(
-      box([-C - 1.1, C - 0.8, zT + T], [2.2, 1.6, 0.8], { tag: '20' }, [0, 1, 2].map((i) =>
-        line([[-C - 0.7, C - 0.4 + i * 0.4, zT + T + 0.8], [-C + 0.7, C - 0.4 + i * 0.4, zT + T + 0.8]], { stroke: 'ink', tag: '20' }))),
-    );
-    // journal-fit dial
-    tools.push(
-      cylinder([C, C, zT + T], 1.0, 0.3, { tag: '20' }, undefined, [
-        line(ring([C, C, zT + T + 0.3], 0.62, 36, Math.PI * 0.15, Math.PI * 0.85), { stroke: 'muted', tag: '20' }),
-        line([[C, C, zT + T + 0.3], [C + 0.38, C + 0.5, zT + T + 0.3]], { stroke: 'ink', tag: '20', w: 1.3 }),
-      ]),
-    );
-
-    // agents
-    const agents: Group[] = [];
-    const zs = zA + T;
-    const traces: Item[] = [
-      line([[-1.2, 0, zs], [-C, 0, zs], [-C, -C + 0.55, zs]], acc('12', 1.0)),
-      line([[1.2, 0, zs], [C, 0, zs], [C, -C + 0.55, zs]], { stroke: 'muted', tag: '12' }),
-      line([[0, 1.2, zs], [0, C, zs], [-C + 0.55, C, zs]], { stroke: 'muted', tag: '12' }),
-      line([[0, 1.2, zs], [0, C, zs], [C - 0.55, C, zs]], { stroke: 'muted', tag: '12' }),
-    ];
-    agents.push(
-      box([-1.2, -1.2, zs], [2.4, 2.4, 1.5], { tag: '10' }, [
-        ...boxItems([-0.45, -0.45, zs + 1.5], [0.9, 0.9, 0.18], { fill: 'accent', stroke: 'accent', tag: '10 50' }),
-      ]),
-    );
-    for (const [x, y] of [[-C, -C], [C, -C], [-C, C], [C, C]])
-      agents.push(box([x - 0.55, y - 0.55, zs], [1.1, 1.1, 1.1], { tag: '12', fill: x === -C && y === -C ? 'tint' : 'paper' }));
-
-    // the request
-    const doc: Group[] = [
-      sheet(-1.9, -2.3, zD - 0.16, 3.6, 4.6, 5, { tag: '40' }),
-      sheet(-1.7, -2.5, zD, 3.6, 4.6, 9, { tag: '40' }),
-    ];
-    doc.push(g([0, 0, zD + 0.1], [line([[-1.4, 1.1, zD + 0.06], [0.9, 1.1, zD + 0.06]], { stroke: 'accent', tag: '40', w: 1.4 })]));
-
-    // the request path, travelling down through the stack
-    const path = (z0: number, z1: number, x: number, y: number, delay: number): Group =>
-      g([x, y, (z0 + z1) / 2], [line([[x, y, z0], [x, y, z1]], { stroke: 'accent', w: 0.9, comet: delay })]);
-
-    const L = (at: V3, n: string, dx: number, dy: number) => label(at, n, dx, dy);
-
-    // dashed drop lines from the request's corners to where it lands
-    const drops = g([0, 0, (zs + zD) / 2], [[-1.7, -2.5], [1.9, -2.5], [-1.7, 2.1], [1.9, 2.1]].map(([x, y]) =>
-      line([[x, y, zD - 0.16], [x, y, zs]], { stroke: 'muted', dash: true, w: 0.7 })));
-
-    return [
-      [plate(0, 0, zI, P, P, T, { tag: '30' })],
-      infra,
-      [guides(H, zI + T, zT), path(zT, zI + T + 0.95, -C, -C, 2.0)],
-      [plate(0, 0, zT, P, P, T, { tag: '20' })],
-      tools,
-      [guides(H, zT + T, zA), path(zA, zT + T + 1.2, -C, -C, 1.5)],
-      [plate(0, 0, zA, P, P, T, { tag: '10 12' })],
-      [g([0, 0, zs], traces)],
-      agents,
-      [drops, path(zD - 0.16, zs + 1.5 + 0.18, 0, 0, 0.5)],
-      doc,
-      [
-        g([0, 0, 99], [
-          L([1.7, 0.5, zD + 0.05], '40', 2.4, -0.9),
-          L([0.45, -0.2, zs + 1.6], '50', 4.4, -0.5),
-          L([-1.2, -0.6, zs + 1.0], '10', -3.2, -1.6),
-          L([C + 0.55, -C, zs + 0.6], '12', 2.2, 1.1),
-          L([-C - 1.0, -C, zT + T + 0.7], '22', -2.4, 0.4),
-          L([H, -H, zT + 0.1], '20', 2.0, 0.8),
-          L([-H, -H, zI + 0.1], '30', -2.2, 0.9),
-        ]),
-      ],
-    ];
-  },
-};
-
 /* ───────────────────────── FIG. 2 · agent runtime ───────────────────────── */
 
 const runtime: FigureDef = {
@@ -546,6 +434,6 @@ const gateway: FigureDef = {
   },
 };
 
-export const figures = { hero, runtime, fanout, protocol, batch, gateway } satisfies Record<string, FigureDef>;
+export const figures = { runtime, fanout, protocol, batch, gateway } satisfies Record<string, FigureDef>;
 export type FigureName = keyof typeof figures;
 

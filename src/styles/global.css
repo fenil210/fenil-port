@@ -346,66 +346,112 @@ time,
 
 /* ───────── hero ───────── */
 
+/* the hero spans the window so fig. 1 can run behind the copy; its grid keeps the page's measure */
 .hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--s3);
   align-items: center;
   min-height: calc(100svh - 64px);
-  padding-block: var(--s4) var(--s5);
+  padding-block: var(--s4);
 }
 
 .hero-copy {
   grid-column: 1 / span 7;
   padding-right: var(--s4);
-}
-
-/* the band under the hero: positional encoding in ASCII, drawn by field.ts */
-.hero {
-  grid-template-rows: 1fr auto;
-}
-
-.field {
-  grid-column: 1 / -1;
-  margin-top: var(--s4);
-}
-
-.field-grid {
   position: relative;
-  height: calc(18 * 13px);
-  overflow: hidden;
-  color: var(--muted);
-  font: 11px/13px var(--mono);
-  user-select: none;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  z-index: 1;
 }
 
-.field-grid pre {
+/* fig. 1: the race, drawn by race.ts on a canvas that fills the hero */
+.race {
+  grid-column: 8 / span 5;
+  align-self: end;
+}
+
+.race-art {
   position: absolute;
   inset: 0;
-  margin: 0;
-  font: inherit;
-  white-space: pre;
 }
 
-.field-lens {
+.race-art canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* a small copy of the frame, blurred, glowing under the sharp one */
+.race-glow {
+  filter: blur(14px) saturate(1.3);
+  opacity: 0.75;
+  mix-blend-mode: screen;
+}
+
+:root[data-theme='light'] .race-glow {
+  opacity: 0.3;
+  mix-blend-mode: multiply;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .race-glow {
+    opacity: 0.3;
+    mix-blend-mode: multiply;
+  }
+}
+
+.race figcaption {
+  position: relative;
+  z-index: 1;
+  flex-wrap: wrap;
+  gap: var(--s1) var(--s2);
+}
+
+.race-head {
+  color: var(--ink);
+}
+
+.race-step {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.race-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1) var(--s3);
+  flex-basis: 100%;
+}
+
+.race-legend li {
+  white-space: nowrap;
+}
+
+.race-glyph {
+  color: var(--ink);
+}
+
+[data-opt='adam'] .race-glyph {
   color: var(--accent);
 }
 
-.field-cap {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--s1) var(--s3);
-  margin-top: var(--s2);
+.race-loss {
+  display: inline-block;
+  min-width: 7ch;
   color: var(--muted);
-  font: 12px/1.5 var(--mono);
+  font-variant-numeric: tabular-nums;
 }
 
-.field-cap sup {
-  font-size: 0.75em;
-  line-height: 0;
+.race-key {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--muted);
 }
 
 .display {
@@ -477,18 +523,6 @@ time,
     background-size: 100% 1px, 100% 1px;
     transition-duration: 0.6s, 0.2s;
   }
-}
-
-.hero-fig {
-  grid-column: 8 / span 5;
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.hero-fig .fig-frame {
-  max-height: calc(100svh - 64px - 96px - 48px);
 }
 
 /* ───────── figures ───────── */
@@ -2919,28 +2953,23 @@ a.ref {
     grid-template-columns: 1fr auto auto auto;
   }
 
-  .hero {
+  .hero-grid {
     min-height: 0;
-    row-gap: var(--s4);
-    grid-template-rows: none;
+    row-gap: var(--s3);
   }
 
   .hero-copy,
-  .hero-fig {
+  .race {
     grid-column: 1 / -1;
   }
 
-  /* the band follows the copy here, ahead of the drawing */
-  .hero-fig {
-    order: 1;
-  }
-
-  .field {
-    margin-top: 0;
-  }
-
-  .hero-fig .fig-frame {
-    max-height: none;
+  /* here the race sits under the copy, edge to edge */
+  .race-art {
+    position: relative;
+    height: clamp(320px, 96vw, 560px);
+    margin-inline: calc(-1 * var(--gutter));
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   .systems-list {
@@ -2964,12 +2993,6 @@ a.ref {
 @media (max-width: 860px) {
   :root {
     --gutter: var(--s3);
-  }
-
-  .field-grid {
-    height: calc(16 * 11px);
-    font-size: 9px;
-    line-height: 11px;
   }
 
   body {

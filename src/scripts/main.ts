@@ -1,12 +1,12 @@
-import { cmdToString, render, type Cmd, type Frame } from '../lib/axo';
-import { figures, type FigureName } from '../lib/scenes';
-import { initField } from './field';
+import type { Frame } from '../lib/axo';
+import type { FigureName } from '../lib/scenes';
 import { initGlobe } from './globe';
 import { initMatrix } from './matrix';
+import { initRace } from './race';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-initField(reduced);
+initRace(reduced);
 
 /* ───────── figures ───────── */
 
@@ -245,80 +245,6 @@ document.addEventListener('pointerover', (e) => {
     { once: true },
   );
 });
-
-/* live re-projection for the hero drawing */
-
-function patch(svg: SVGSVGElement, cmds: Cmd[]) {
-  const kids = svg.children;
-  let same = kids.length === cmds.length;
-  for (let i = 0; same && i < cmds.length; i++) if ((kids[i] as SVGElement).dataset.k !== cmds[i].k) same = false;
-  if (!same) {
-    const hl = svg.dataset.hl || null;
-    svg.innerHTML = cmds.map(cmdToString).join('');
-    if (hl) highlight(svg, hl);
-    if (lifts.has(svg)) applyLift(svg);
-    return;
-  }
-  for (let i = 0; i < cmds.length; i++) {
-    const c = cmds[i];
-    const el = kids[i];
-    if (c.el === 'path') el.setAttribute('d', c.d!);
-    else if (c.el === 'circle') {
-      el.setAttribute('cx', String(c.cx));
-      el.setAttribute('cy', String(c.cy));
-    } else {
-      el.setAttribute('x', String(c.x));
-      el.setAttribute('y', String(c.y));
-    }
-  }
-}
-
-const live = document.querySelector<SVGSVGElement>('svg.axo[data-live]');
-if (live && !reduced) {
-  const f = figs.get(live)!;
-  const def = figures[f.name];
-  const base = def.cam;
-  const cam = { ...base };
-  const target = { yaw: 0, pitch: 0 };
-  let visible = true;
-  let pointerActive = false;
-  const host = live.closest('section') ?? live;
-
-  host.addEventListener('pointermove', (e) => {
-    const r = live.getBoundingClientRect();
-    const nx = ((e as PointerEvent).clientX - (r.left + r.width / 2)) / innerWidth;
-    const ny = ((e as PointerEvent).clientY - (r.top + r.height / 2)) / innerHeight;
-    target.yaw = Math.max(-1, Math.min(1, nx * 1.6)) * 9;
-    target.pitch = Math.max(-1, Math.min(1, ny * 1.6)) * -4;
-    pointerActive = true;
-  });
-  host.addEventListener('pointerleave', () => {
-    pointerActive = false;
-    target.yaw = 0;
-    target.pitch = 0;
-  });
-
-  new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(live);
-
-  let last = 0;
-  const t0 = performance.now();
-  const tick = (now: number) => {
-    requestAnimationFrame(tick);
-    if (!visible || !f.drawn || live.classList.contains('drawing') || now - last < 33) return;
-    last = now;
-    const t = (now - t0) / 1000;
-    const sway = pointerActive ? 0 : Math.sin(t * 0.35) * 3;
-    const ty = base.yaw + target.yaw + sway;
-    const tp = base.pitch + target.pitch;
-    const dy = ty - cam.yaw;
-    const dp = tp - cam.pitch;
-    if (Math.abs(dy) < 0.01 && Math.abs(dp) < 0.01) return;
-    cam.yaw += dy * 0.08;
-    cam.pitch += dp * 0.08;
-    patch(live, render(def.build(cam), cam, f.box).cmds);
-  };
-  requestAnimationFrame(tick);
-}
 
 /* ───────── work: sticky stage ───────── */
 
