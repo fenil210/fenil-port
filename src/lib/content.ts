@@ -30,9 +30,9 @@ export const contact = {
 export type Legend = [string, string][];
 
 export const hero = {
-  title: ['Fenil Ramoliya', 'builds AI agents and the systems they run on.'],
+  title: ['Fenil Ramoliya', 'likes watching things converge.'],
   lede:
-    'I work on every layer of that: the harness and runtime around the model, the tools and protocols agents act through, and the infrastructure that keeps them fast, affordable and correct under real traffic. I do it at Cactus Communications, mostly on Paperpal, for an academic world I first knew as a researcher.',
+    'I build AI agents and the systems they run on, and I work on every layer of that: the harness and runtime around the model, the tools and protocols agents act through, and the infrastructure that keeps them fast, affordable and correct under real traffic. I do it at Cactus Communications, mostly on Paperpal, for an academic world I first knew as a researcher.',
 };
 
 export interface System {
