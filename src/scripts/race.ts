@@ -132,6 +132,9 @@ export function initRace(reduced: boolean) {
   let raf = 0;
   let last = 0;
   let shown = 0;
+  // where each optimizer's name is drawn, gliding toward its place, and which pairs share a label
+  const labelAt = new Map<OptName, [number, number]>();
+  let together = new Set<string>();
 
   const toWorld = (x: number, y: number): [number, number] => {
     const [x0, x1, y0, y1] = sf.box;
@@ -189,6 +192,8 @@ export function initRace(reduced: boolean) {
     opts = optNames.map((n) => newOpt(n, from));
     done = 0;
     owed = 0;
+    labelAt.clear();
+    together = new Set();
   }
 
   function run(n: number) {
@@ -350,14 +355,14 @@ export function initRace(reduced: boolean) {
     const yaw = BASE_YAW + (reduced ? 0 : Math.sin(now / 8000) * 0.24);
     cyw = Math.cos(yaw);
     syw = Math.sin(yaw);
-    draw(now);
+    draw(now, dt);
     if (now - shown > 120 || reduced) {
       shown = now;
       readout();
     }
   }
 
-  function draw(now: number) {
+  function draw(now: number, dt: number) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
@@ -424,7 +429,8 @@ export function initRace(reduced: boolean) {
       const q = cell(sx, sy);
       return q < 0 ? 0 : keep[q];
     };
-    const tags: { text: string; x: number; y: number; col: string; a: number }[] = [];
+    // labels for marks; one whose mark an optimizer is sitting on fades, as the name says it already
+    const tags: { text: string; x: number; y: number; col: string; a: number; mark?: [number, number] }[] = [];
 
     // each global minimum: a ring with a slow pulse going out from it
     const beat = reduced ? 0.45 : (now % 2400) / 2400;
@@ -438,7 +444,7 @@ export function initRace(reduced: boolean) {
       ring(sx, sy, 3.5 * dpr);
       ctx.globalAlpha = a * (1 - beat) * 0.9;
       ring(sx, sy, (3.5 + 16 * beat) * dpr);
-      tags.push({ text: 'min', x: sx + 9 * dpr, y: sy + 9 * dpr, col: accent, a });
+      tags.push({ text: 'min', x: sx + 9 * dpr, y: sy + 9 * dpr, col: accent, a, mark: [sx, sy] });
     }
 
     // the optimizers: a streak of light along each path, brighter toward the head
@@ -450,7 +456,7 @@ export function initRace(reduced: boolean) {
       ctx.lineWidth = dpr;
       ctx.globalAlpha = sa * 0.8;
       ring(s0, s1, 3 * dpr);
-      tags.push({ text: 'start', x: s0 - 9 * dpr, y: s1 + 11 * dpr, col: ink, a: sa });
+      tags.push({ text: 'start', x: s0 - 9 * dpr, y: s1 + 11 * dpr, col: ink, a: sa, mark: [s0, s1] });
       // each path is stroked in a few runs, brighter toward the head and dimmer where the surface
       // hides it; one stroke per run, so dense stretches do not pile up into a bar of light
       ctx.globalCompositeOperation = 'source-over';
@@ -512,7 +518,34 @@ export function initRace(reduced: boolean) {
       ctx.fillStyle = h.o.name === 'adam' ? accent : ink;
       ctx.fillText(GLYPH[h.o.name], h.x, h.y);
     }
-    for (const h of heads.sort((a, b) => b.y - a.y)) tags.unshift({ text: LABEL[h.o.name], x: h.x + 10 * dpr, y: h.y, col: h.o.name === 'adam' ? accent : ink, a: h.a });
+
+    // optimizers close together share one block of names, always in legend order, centred on them;
+    // a pair joins at 22px and parts at 34px, so one hovering at the edge does not flicker in and out
+    const LH = 13 * dpr;
+    const root = heads.map((_, i) => i);
+    const find = (i: number): number => (root[i] === i ? i : (root[i] = find(root[i])));
+    const near = new Set<string>();
+    for (let i = 0; i < heads.length; i++)
+      for (let j = i + 1; j < heads.length; j++) {
+        const key = heads[i].o.name + heads[j].o.name;
+        if (Math.hypot(heads[i].x - heads[j].x, heads[i].y - heads[j].y) < (together.has(key) ? 34 : 22) * dpr) {
+          near.add(key);
+          root[find(j)] = find(i);
+        }
+      }
+    together = near;
+    const groups = new Map<number, typeof heads>();
+    heads.forEach((h, i) => groups.set(find(i), [...(groups.get(find(i)) ?? []), h]));
+    const glide = reduced ? 1 : 1 - Math.exp(-dt / 70);
+    for (const g of groups.values()) {
+      const x = Math.max(...g.map((h) => h.x)) + 11 * dpr;
+      const y = g.reduce((s, h) => s + h.y, 0) / g.length - ((g.length - 1) * LH) / 2;
+      g.forEach((h, i) => {
+        const p = labelAt.get(h.o.name);
+        if (!p) labelAt.set(h.o.name, [x, y + i * LH]);
+        else (p[0] += (x - p[0]) * glide), (p[1] += (y + i * LH - p[1]) * glide);
+      });
+    }
 
     probe = null;
     if (pointer && fade > 0.9) {
@@ -535,19 +568,28 @@ export function initRace(reduced: boolean) {
 
     ctx.textAlign = 'left';
     ctx.font = `${10 * dpr}px ${mono}`;
-    const placed: { x: number; y: number; w: number }[] = [];
+    const placed: [number, number, number, number][] = [];
+    const label = (text: string, x: number, y: number, col: string, a: number) => {
+      const w = ctx.measureText(text).width;
+      placed.push([x - 3 * dpr, y - 7 * dpr, x + w + 3 * dpr, y + 7 * dpr]);
+      ctx.globalAlpha = a * 0.8;
+      ctx.fillStyle = paper;
+      ctx.fillRect(x - 3 * dpr, y - 7 * dpr, w + 6 * dpr, 14 * dpr);
+      ctx.globalAlpha = a;
+      ctx.fillStyle = col;
+      ctx.fillText(text, x, y);
+    };
+    // the names hold their places; other labels step down out of their way
+    for (const h of heads) if (h.a >= 0.05) label(LABEL[h.o.name], ...labelAt.get(h.o.name)!, h.o.name === 'adam' ? accent : ink, h.a);
     for (const t of tags) {
-      if (t.a < 0.05) continue;
+      const nearest = t.mark ? Math.min(Infinity, ...heads.map((h) => Math.hypot(h.x - t.mark![0], h.y - t.mark![1]))) : Infinity;
+      const a = t.a * clamp((nearest - 12 * dpr) / (24 * dpr));
+      if (a < 0.05) continue;
       const w = ctx.measureText(t.text).width;
       let y = t.y;
-      while (placed.some((p) => Math.abs(p.y - y) < 13 * dpr && t.x < p.x + p.w + 4 * dpr && t.x + w + 4 * dpr > p.x)) y += 13 * dpr;
-      placed.push({ x: t.x, y, w });
-      ctx.globalAlpha = t.a * 0.8;
-      ctx.fillStyle = paper;
-      ctx.fillRect(t.x - 3 * dpr, y - 7 * dpr, w + 6 * dpr, 14 * dpr);
-      ctx.globalAlpha = t.a;
-      ctx.fillStyle = t.col;
-      ctx.fillText(t.text, t.x, y);
+      const hit = () => placed.some(([x0, y0, x1, y1]) => t.x - 3 * dpr < x1 && t.x + w + 3 * dpr > x0 && y - 7 * dpr < y1 && y + 7 * dpr > y0);
+      for (let n = 0; n < 12 && hit(); n++) y += LH;
+      label(t.text, t.x, y, t.col, a);
     }
     ctx.globalAlpha = 1;
   }
