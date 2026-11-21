@@ -1,9 +1,12 @@
 import { cmdToString, render, type Cmd, type Frame } from '../lib/axo';
 import { figures, type FigureName } from '../lib/scenes';
+import { initField } from './field';
 import { initGlobe } from './globe';
 import { initMatrix } from './matrix';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+initField(reduced);
 
 /* ───────── figures ───────── */
 

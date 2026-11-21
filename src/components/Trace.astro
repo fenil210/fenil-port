@@ -8,7 +8,7 @@ interface Props {
   spans: Span[];
   text?: string;
 }
-const { no, spans, text = 'This visit as a trace. Each section is a span, timed while it is on screen. Nothing leaves this page.' } = Astro.props;
+const { no, spans, text = 'Time spent on each section of this page.' } = Astro.props;
 ---
 
 <figure class="fig trace" id={`fig-${no}`}>

@@ -184,6 +184,12 @@ export const principles = [
 
 export const projects = [
   {
+    name: 'roadtest',
+    text: 'Tests an AI agent from the outside before a release. Scenarios in YAML, checked by code and by a judge model, against an HTTP endpoint, a Python function or a command. A failed gate fails CI. On PyPI.',
+    year: '2026',
+    href: 'https://github.com/fenil210/roadtest',
+  },
+  {
     name: 'Whorl',
     text: 'Offline file conversion from the Mac menu bar. Drag a file, pick a format, done. Its own DOCX reader and writer, PDFKit and Vision OCR, 133 tests.',
     year: '2026',
@@ -202,10 +208,10 @@ export const projects = [
     href: 'https://github.com/fenil210/mcp-doctor',
   },
   {
-    name: 'shipshape-skills',
-    text: 'Portable skills for coding assistants, written once and usable across tools.',
+    name: 'pocket-skills',
+    text: 'Agent Skills for Claude Code, Codex and other coding agents: maintainable changes, writing and auditing tests, pruning test suites, and building a portfolio site.',
     year: '2026',
-    href: 'https://github.com/fenil210-cactus/shipshape-skills',
+    href: 'https://github.com/fenil210/pocket-skills',
   },
   {
     name: 'MemoraAI',

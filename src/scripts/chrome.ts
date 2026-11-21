@@ -73,7 +73,7 @@ if (!reduced) {
 
 /* ───────── rules grow out from where the pointer enters ───────── */
 
-document.querySelectorAll<HTMLElement>('.rows a, .contact-links a').forEach((a) => {
+document.querySelectorAll<HTMLElement>('.contact-links a').forEach((a) => {
   a.addEventListener('pointerenter', (e) => {
     const r = a.getBoundingClientRect();
     a.style.setProperty('--ox', `${Math.round(e.clientX - r.left)}px`);

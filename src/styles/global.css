@@ -360,6 +360,54 @@ time,
   padding-right: var(--s4);
 }
 
+/* the band under the hero: positional encoding in ASCII, drawn by field.ts */
+.hero {
+  grid-template-rows: 1fr auto;
+}
+
+.field {
+  grid-column: 1 / -1;
+  margin-top: var(--s4);
+}
+
+.field-grid {
+  position: relative;
+  height: calc(18 * 13px);
+  overflow: hidden;
+  color: var(--muted);
+  font: 11px/13px var(--mono);
+  user-select: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+
+.field-grid pre {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  font: inherit;
+  white-space: pre;
+}
+
+.field-lens {
+  color: var(--accent);
+}
+
+.field-cap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s1) var(--s3);
+  margin-top: var(--s2);
+  color: var(--muted);
+  font: 12px/1.5 var(--mono);
+}
+
+.field-cap sup {
+  font-size: 0.75em;
+  line-height: 0;
+}
+
 .display {
   font-size: clamp(46px, 5.3vw, 80px);
   font-weight: 380;
@@ -841,6 +889,18 @@ h2 {
   color: inherit;
   text-decoration: none;
   position: relative;
+  isolation: isolate;
+}
+
+/* the whole row is the link, so hover tints the whole row, a little wider than its text */
+.rows a::before {
+  content: '';
+  position: absolute;
+  inset: 0 calc(-1 * var(--s2));
+  z-index: -1;
+  background: var(--shade);
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
 }
 
 .row-name {
@@ -848,7 +908,7 @@ h2 {
   font-weight: 450;
   line-height: 1.25;
   letter-spacing: -0.01em;
-  transition: color 0.25s, transform 0.4s var(--ease);
+  transition: color 0.15s ease-out;
 }
 
 .row-text {
@@ -870,25 +930,18 @@ h2 {
   width: 16px;
   height: 16px;
   fill: none;
+  stroke: currentColor;
   stroke-width: 1.25;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.row-arrow .base {
-  stroke: var(--faint);
+.row-arrow {
+  color: var(--faint);
+  transition: color 0.15s ease-out, translate 0.15s ease-out;
 }
 
-/* the accent arrow draws over the muted one; it retracts quickly and draws slowly */
-.row-arrow .draw {
-  stroke: var(--accent);
-  stroke-dasharray: 1 1;
-  stroke-dashoffset: 1;
-  transition: stroke-dashoffset 0.16s ease-out;
-}
-
-/* a hairline that grows out from wherever the pointer entered the row */
-.rows a::before,
+/* a hairline that grows out from wherever the pointer entered the link */
 .contact-links a::before {
   content: '';
   position: absolute;
@@ -900,22 +953,28 @@ h2 {
   transition: transform 0.3s var(--ease);
 }
 
+.rows a:active::before {
+  opacity: 1;
+}
+
+.rows a:focus-visible .row-name {
+  color: var(--accent);
+}
+
 @media (hover: hover) {
+  .rows a:hover::before {
+    opacity: 1;
+  }
+
   .rows a:hover .row-name {
     color: var(--accent);
-    transform: translateX(var(--s1));
   }
 
-  .rows a:hover .row-arrow .draw {
-    stroke-dashoffset: 0;
-    transition: stroke-dashoffset 0.36s var(--ease);
+  .rows a:hover .row-arrow {
+    color: var(--accent);
+    translate: 2px -2px;
   }
 
-  .rows a:hover .row-arrow .draw + .draw {
-    transition-delay: 0.12s;
-  }
-
-  .rows a:hover::before,
   .contact-links a:hover::before {
     transform: none;
     transition-duration: 0.7s;
@@ -940,6 +999,19 @@ h2 {
   margin-top: var(--s3);
   padding-left: calc((100% - 11 * var(--s3)) / 12 * 3 + 3 * var(--s3));
   font: 14px/1.5 var(--mono);
+}
+
+.more a::after {
+  content: '→' / '';
+  display: inline-block;
+  margin-left: 1ch;
+  transition: translate 0.15s ease-out;
+}
+
+@media (hover: hover) {
+  .more a:hover::after {
+    translate: 4px 0;
+  }
 }
 
 /* building for research: three lines under the systems, laid out like recognition */
@@ -2850,11 +2922,21 @@ a.ref {
   .hero {
     min-height: 0;
     row-gap: var(--s4);
+    grid-template-rows: none;
   }
 
   .hero-copy,
   .hero-fig {
     grid-column: 1 / -1;
+  }
+
+  /* the band follows the copy here, ahead of the drawing */
+  .hero-fig {
+    order: 1;
+  }
+
+  .field {
+    margin-top: 0;
   }
 
   .hero-fig .fig-frame {
@@ -2882,6 +2964,12 @@ a.ref {
 @media (max-width: 860px) {
   :root {
     --gutter: var(--s3);
+  }
+
+  .field-grid {
+    height: calc(16 * 11px);
+    font-size: 9px;
+    line-height: 11px;
   }
 
   body {
