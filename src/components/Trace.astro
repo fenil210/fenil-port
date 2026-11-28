@@ -6,12 +6,11 @@ import type { Span } from '../layouts/Base.astro';
 interface Props {
   no: string;
   spans: Span[];
-  text?: string;
 }
-const { no, spans, text = 'Time spent on each section of this page.' } = Astro.props;
+const { no, spans } = Astro.props;
 ---
 
-<figure class="fig trace" id={`fig-${no}`}>
+<figure class="fig trace" id={`fig-${no}`} aria-label="Visit trace">
   <div class="trace-axis" aria-hidden="true"></div>
   <ol class="trace-rows">
     <li class="span root">
@@ -29,8 +28,4 @@ const { no, spans, text = 'Time spent on each section of this page.' } = Astro.p
       ))
     }
   </ol>
-  <figcaption>
-    <span class="fig-no" aria-hidden="true">Fig. {no}</span>{' '}
-    <span>{text}</span>
-  </figcaption>
 </figure>

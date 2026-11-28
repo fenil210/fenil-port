@@ -2,8 +2,7 @@
 
 import { initMatrix } from './matrix';
 
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-initMatrix(reduced);
+initMatrix();
 
 // filters: one theme, or first-author papers, or all. Without JS every paper shows.
 const bar = document.querySelector<HTMLElement>('[data-filters]');

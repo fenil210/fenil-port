@@ -33,7 +33,7 @@ const spans = [{ id: 'top', name: 'Overview' }, ...groups.map((g) => ({ id: `y${
         security for connected systems, and applied deep learning. Each title links to the paper by its DOI.
       </p>
 
-      <dl class="stats">
+      <dl class="stats has-note">
         {
           research.stats.map((s) => (
             <div>
@@ -88,8 +88,10 @@ const spans = [{ id: 'top', name: 'Overview' }, ...groups.map((g) => ({ id: `y${
                   </p>
                   <p class="paper-venue">{venue(p)}</p>
                   <p class="paper-meta">
-                    {theme[p.th]} · {p.j ? 'Journal article' : 'Conference paper'}
-                    {p.first && ' · First author'} · <span class="doi">DOI {p.doi}</span>
+                    <span>{theme[p.th]}</span>
+                    <span>{p.j ? 'Journal article' : 'Conference paper'}</span>
+                    {p.first && <span>First author</span>}
+                    <span class="doi">DOI {p.doi}</span>
                   </p>
                   <details class="cite">
                     <summary>Cite</summary>

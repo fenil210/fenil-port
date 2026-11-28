@@ -1,6 +1,5 @@
 ---
 import { getImage } from 'astro:assets';
-import Arrow from '../../components/Arrow.astro';
 import Base from '../../layouts/Base.astro';
 import { fmt, href, iso, mins, rendered, series } from '../../lib/articles';
 import { articleGraph } from '../../lib/schema';
@@ -52,22 +51,23 @@ const around = [
   markdown={`/articles/${a.id}.md`}
   spans={spans}
   traceNo={String(prose.figures + 1)}
-  traceText="Time spent on each part of this article."
   here="articles"
 >
   <main id="main">
     <article class="wrap article" data-slug={a.id} data-minutes={prose.minutes}>
       <header class="article-head">
-        <p class="article-kicker">
+        <p class="article-context">
           <a href="/articles/">Articles</a>
           <time datetime={iso(date)}>{fmt(date)}</time>
           {a.data.series && <span>{series}, {a.data.series}</span>}
         </p>
         <h1 class="article-title">{title}</h1>
-        <p class="article-meta">
-          By <a href="/" rel="author">Fenil Ramoliya</a> · {prose.words.toLocaleString('en-GB')} words · {minutes} min read · <a href={x}>First published on X</a> ·{' '}
-          <a href={`/articles/${a.id}.md`} type="text/markdown">Markdown</a>
-        </p>
+        <ul class="article-meta" aria-label="Article details">
+          <li>By <a href="/" rel="author">Fenil Ramoliya</a></li>
+          <li>{minutes} min read</li>
+          <li><a href={x}>First published on X</a></li>
+          <li><a href={`/articles/${a.id}.md`} type="text/markdown">Markdown</a></li>
+        </ul>
         <p class="resume" hidden><a href="#main"></a></p>
       </header>
 
@@ -138,7 +138,6 @@ const around = [
                         <span class="row-year">{p.data.series}</span>
                         <span class="row-name">{p.data.title}</span>
                         <span class="row-year">{mins(p.prose.minutes)} min</span>
-                        <Arrow />
                       </a>
                     )}
                   </li>
@@ -159,7 +158,6 @@ const around = [
                       <span class="row-year">{label}</span>
                       <span class="row-name">{p.data.title}</span>
                       <span class="row-year">{mins(p.prose.minutes)} min</span>
-                      <Arrow />
                     </a>
                   </li>
                 ))}

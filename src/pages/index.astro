@@ -1,5 +1,4 @@
 ---
-import Arrow from '../components/Arrow.astro';
 import Figure from '../components/Figure.astro';
 import IndiaMap from '../components/IndiaMap.astro';
 import Matrix from '../components/Matrix.astro';
@@ -7,7 +6,7 @@ import Base from '../layouts/Base.astro';
 import { articles, fmt, href, iso } from '../lib/articles';
 import { atlas } from '../lib/atlas';
 import { drawGlobe, SIZE, VIEW } from '../lib/globe';
-import { bio, contact, hero, links, meta, papers, path, principles, projects, recognition, research, systems, travel } from '../lib/content';
+import { bio, citedOn, contact, hero, links, meta, papers, path, projects, recognition, research, systems, travel } from '../lib/content';
 import { graph } from '../lib/schema';
 import { optNames } from '../scripts/descent';
 import { GLYPH, LABEL } from '../scripts/race';
@@ -61,7 +60,6 @@ const spans = [
           <h1 class="display">{hero.title.map((t) => <><span>{t}</span>{' '}</>)}</h1>
           <p class="lede">{hero.lede}</p>
           <ul class="hero-links">
-            <li><a class="btn" href={`mailto:${links.email}`}>Write to me</a></li>
             <li><a href={links.github} rel="me">GitHub</a></li>
             <li><a href={links.linkedin} rel="me">LinkedIn</a></li>
             <li><a href={links.scholar}>Scholar</a></li>
@@ -69,10 +67,12 @@ const spans = [
           </ul>
         </div>
         <figure class="race" id="fig-1" aria-label="Figure 1: SGD, Momentum, RMSProp and Adam descending a loss surface drawn in its own loss values.">
-          <div class="race-art" data-nosnippet><canvas class="race-glow" aria-hidden="true"></canvas><canvas class="race-sharp" aria-hidden="true"></canvas></div>
+          <div class="race-art" data-nosnippet><canvas class="race-sharp" aria-hidden="true"></canvas></div>
           <figcaption>
-            <span class="fig-no" aria-hidden="true">Fig. 1</span>{' '}
-            <span class="race-head"><span class="race-name">Rosenbrock function</span> <span class="race-step"></span></span>{' '}
+            <div class="race-head">
+              <span class="race-name">Rosenbrock function</span>
+              <span class="race-step"></span>
+            </div>
             <ol class="race-legend">
               {optNames.map((n) => (
                 <li data-opt={n}>
@@ -80,7 +80,12 @@ const spans = [
                 </li>
               ))}
             </ol>
-            <p class="race-key">Each digit is the loss at that point. Click the surface to start a run from there.</p>
+            <p class="race-key">The digits trace the loss surface. Select a point to start the optimizers there.</p>
+            <div class="race-controls" hidden>
+              <button type="button" data-action="pause">Pause</button>
+              <button type="button" data-action="restart">Restart</button>
+              <button type="button" data-action="next">Next surface</button>
+            </div>
           </figcaption>
         </figure>
         </div>
@@ -93,44 +98,30 @@ const spans = [
           <div class="systems-list">
             {
               systems.map((s) => (
-                <article class="system" id={s.id} data-fig={s.fig}>
-                  <h3>{s.name}</h3>
-                  <p class="body">{s.body}</p>
-                  <ul class="inside">
-                    {s.inside.map((i) => <li>{i}</li>)}
-                  </ul>
-                  <p class="stack">{s.stack}</p>
-                  <div class="fig-slot" />
+                <article class="system" id={s.id}>
+                  <div class="system-copy">
+                    <h3>{s.name}</h3>
+                    <p class="body">{s.body}</p>
+                    <ul class="inside">
+                      {s.inside.map((i) => <li>{i}</li>)}
+                    </ul>
+                    <p class="stack">{s.stack}</p>
+                  </div>
+                  <Figure name={s.fig} no={s.figNo} title={s.name} legend={s.legend} />
                 </article>
               ))
             }
           </div>
-          <div class="systems-stage" aria-live="off">
-            <div class="stage-inner">
-              {systems.map((s, i) => <Figure name={s.fig} no={s.figNo} title={s.name} legend={s.legend} class:list={['stage-fig', i === 0 && 'on']} />)}
-            </div>
+          <div class="systems-stage">
+            <div class="stage-inner"></div>
           </div>
-        </div>
-
-        <div class="recognition principles">
-          <p class="label-inline">Building for research</p>
-          <ul>
-            {
-              principles.map((p) => (
-                <li>
-                  <span class="what">{p.name}</span>
-                  <span class="where">{p.text}</span>
-                </li>
-              ))
-            }
-          </ul>
         </div>
       </section>
 
       <section class="section wrap" id="research">
         <h2 class="section-head">Research</h2>
 
-        <dl class="stats">
+        <dl class="stats has-note">
           {
             research.stats.map((s) => (
               <div>
@@ -141,6 +132,7 @@ const spans = [
           }
         </dl>
 
+        <p class="stats-note">Citations and h-index from <a href={links.scholar}>Google Scholar</a>, {fmt(new Date(citedOn))}.</p>
         <Matrix no="7" />
 
         <div class="papers">
@@ -151,9 +143,9 @@ const spans = [
                 <li>
                   <p class="paper-title"><a href={`/research/#${p.id}`}>{p.t}</a></p>
                   <p class="paper-meta">
-                    {p.v}, {p.y}
-                    {p.first && <span> · first author</span>}
-                    {p.c && <span> · {p.c} citations</span>}
+                    <span>{p.v}, {p.y}</span>
+                    {p.first && <span>First author</span>}
+                    {p.c && <span>{p.c} citations</span>}
                   </p>
                 </li>
               ))
@@ -173,7 +165,6 @@ const spans = [
                   <span class="row-year">{p.year}</span>
                   <span class="row-name">{p.name}</span>
                   <span class="row-text">{p.text}</span>
-                  <Arrow />
                 </a>
               </li>
             ))
@@ -191,7 +182,6 @@ const spans = [
                 <a href={href(w)}>
                   <time datetime={iso(w.data.date)}>{fmt(w.data.date)}</time>
                   <span class="row-name">{w.data.title}</span>
-                  <Arrow />
                 </a>
               </li>
             ))
@@ -218,7 +208,7 @@ const spans = [
           <ol class="chart-rows">
             {
               path.map((p, i) => (
-                <li class:list={['stint', p.kind, p.to === undefined && 'current']} style={`--i:${path.length - 1 - i}`}>
+                <li class:list={['stint', p.kind, p.to === undefined && 'current']}>
                   <p class="stint-label">
                     <span class="role">{p.role}</span>
                     <span class="where">{p.where}</span>

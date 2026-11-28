@@ -34,7 +34,7 @@ const Mark = link ? 'a' : 'button';
                     href={link ? `#${p.id}` : undefined}
                     class:list={['mark', p.j && 'journal']}
                     data-title={p.t}
-                    data-meta={`${p.v}, ${p.y}${p.j ? ' · journal article' : ''}${p.first ? ' · first author' : ''}`}
+            data-meta={`${p.v}, ${p.y}${p.j ? ', journal article' : ''}${p.first ? ', first author' : ''}`}
                     aria-label={`${p.t}. ${p.v}, ${p.y}.`}
                   />
                 ))}

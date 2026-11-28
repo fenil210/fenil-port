@@ -4,7 +4,7 @@
 
 import { articles, fmt, href, series, type Article } from './articles';
 import { bibtex, doiUrl, venue } from './cite';
-import { bio, citedOn, contact, hero, links, meta, papers, path, principles, projects, recognition, research, systems, themes, travel, years } from './content';
+import { bio, citedOn, contact, hero, links, meta, papers, path, projects, recognition, research, systems, themes, travel, years } from './content';
 
 const job = path.find((p) => p.kind === 'job' && p.to === undefined)!;
 const name = hero.title[0];
@@ -75,10 +75,6 @@ export async function full(site: URL) {
     '## Systems in production',
     '',
     ...systems.flatMap((s) => [`### ${s.name}`, '', s.body, '', ...s.inside.map((i) => `- ${i}`), '', `Stack: ${s.stack}`, '']),
-    '### Building for research',
-    '',
-    ...principles.map((p) => `- ${p.name} ${p.text}`),
-    '',
     '## Research',
     '',
     research.stats.map((s) => `${s.value} ${s.label}`).join(' · '),

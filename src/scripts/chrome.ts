@@ -1,25 +1,24 @@
-// What every page runs: the theme toggle, the masthead, the trace of the visit, the reveal
-// of rows as they arrive, and the hairlines that grow from where the pointer enters.
+// Shared theme, masthead and visit trace.
 import { initTrace } from './trace';
 
 const root = document.documentElement;
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ───────── theme ───────── */
 
-document.querySelector<HTMLButtonElement>('.theme')?.addEventListener('click', () => {
-  const next = root.dataset.theme === 'light' ? 'dark' : 'light';
-  const apply = () => {
+const theme = document.querySelector<HTMLButtonElement>('.theme');
+if (theme) {
+  theme.setAttribute('aria-pressed', String(root.dataset.theme === 'light'));
+  theme.addEventListener('click', () => {
+    const light = root.dataset.theme !== 'light';
+    const next = light ? 'light' : 'dark';
     root.dataset.theme = next;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'light' ? '#f6f6f3' : '#0f0f0e');
+    theme.setAttribute('aria-pressed', String(light));
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', light ? '#ffffff' : '#0f0f0e');
     try {
       localStorage.setItem('theme', next);
     } catch {}
-  };
-  const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
-  if (doc.startViewTransition && !reduced) doc.startViewTransition(apply);
-  else apply();
-});
+  });
+}
 
 /* ───────── masthead ───────── */
 
@@ -48,41 +47,3 @@ if (navLinks.length) {
 /* ───────── this visit as a trace ───────── */
 
 initTrace();
-
-/* ───────── reveal ───────── */
-
-if (!reduced) {
-  const revealIO = new IntersectionObserver(
-    (entries, io) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        e.target.classList.add('in');
-        io.unobserve(e.target);
-      }
-    },
-    { rootMargin: '0px 0px -8% 0px' },
-  );
-  const groups = ['.section-head', '.rows li', '.papers li', '.recognition li', '.stats > div', '.contact-links li'];
-  document.querySelectorAll<HTMLElement>(groups.join(',')).forEach((el) => {
-    const i = el.parentElement ? [...el.parentElement.children].indexOf(el) : 0;
-    el.style.transitionDelay = `${Math.min(i, 8) * 60}ms`;
-    el.classList.add('reveal');
-    revealIO.observe(el);
-  });
-}
-
-/* ───────── rules grow out from where the pointer enters ───────── */
-
-document.querySelectorAll<HTMLElement>('.contact-links a').forEach((a) => {
-  a.addEventListener('pointerenter', (e) => {
-    const r = a.getBoundingClientRect();
-    a.style.setProperty('--ox', `${Math.round(e.clientX - r.left)}px`);
-  });
-});
-
-document.querySelectorAll<HTMLElement>('.hero-links a:not(.btn), .masthead nav a, .more a').forEach((a) => {
-  a.addEventListener('pointerenter', (e) => {
-    const r = a.getBoundingClientRect();
-    a.style.setProperty('--oxp', `${Math.round(((e.clientX - r.left) / r.width) * 100)}%`);
-  });
-});

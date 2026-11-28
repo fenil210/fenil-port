@@ -9,12 +9,9 @@ interface Props {
   // what the figure shows, read out in place of the drawing
   title: string;
   legend: Legend;
-  live?: boolean;
-  class?: string;
-  id?: string;
 }
 
-const { name, no, title, legend, live = false, class: cls, id } = Astro.props;
+const { name, no, title, legend } = Astro.props;
 const def = figures[name];
 const frame = render(def.build(def.cam), def.cam);
 const [x, y, w, h] = frame.box;
@@ -26,14 +23,11 @@ const parts = legend.map(([, part]) => lower(part));
 const plain = `Figure ${no}, ${lower(title)}: ${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}.`;
 ---
 
-<figure class:list={['fig', cls]} data-fig={name} id={id}>
+<figure class="fig">
   <div class="fig-frame" data-nosnippet>
     <svg
       class="axo"
       viewBox={`${x} ${y} ${w} ${h}`}
-      data-scene={name}
-      data-live={live ? '' : undefined}
-      data-box={frame.box.join(' ')}
       style={`--k:${k};aspect-ratio:${w}/${h}`}
       role="img"
       aria-label={plain}
@@ -47,7 +41,7 @@ const plain = `Figure ${no}, ${lower(title)}: ${parts.slice(0, -1).join(', ')} a
       {
         legend.map(([n, part]) => (
           <li>
-            <span class="ref" data-ref={n} aria-hidden="true">{n}</span>{' '}
+            <button type="button" class="ref" data-ref={n} aria-label={`Highlight ${part}`}>{n}</button>{' '}
             {part}
           </li>
         ))

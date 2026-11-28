@@ -33,12 +33,11 @@ interface Props {
   spans?: Span[];
   /** the trace's figure number; pages without one have no trace */
   traceNo?: string;
-  traceText?: string;
   /** the masthead link that points at this page */
   here?: 'research' | 'articles';
 }
 
-const { title, description, path, image, article, noindex = false, graph, markdown, spans = [], traceNo, traceText, here } = Astro.props;
+const { title, description, path, image, article, noindex = false, graph, markdown, spans = [], traceNo, here } = Astro.props;
 const home = path === '/';
 const url = new URL(path, Astro.site);
 // what public/og.png shows, for readers who can't see it
@@ -106,7 +105,7 @@ const nav = [
       try {
         const t = localStorage.getItem('theme');
         if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-        if (t === 'light') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f6f3');
+        if (t === 'light') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff');
       } catch {}
     </script>
   </head>
@@ -135,8 +134,8 @@ const nav = [
             }
           </ul>
         </nav>
-        <a class="btn btn-sm btn-ghost" href={`mailto:${links.email}`}>Email</a>
-        <button class="theme" type="button" aria-label="Switch colour theme">
+        <a class="masthead-email" href={`mailto:${links.email}`}>Email</a>
+        <button class="theme" type="button" aria-label="Light theme" aria-pressed="false">
           <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"></circle><path d="M10 2.75a7.25 7.25 0 0 1 0 14.5z"></path></svg>
         </button>
       </div>
@@ -146,12 +145,11 @@ const nav = [
     <slot />
 
     <footer class="wrap colophon">
-      {traceNo && <Trace no={traceNo} spans={spans} text={traceText} />}
+      {traceNo && <Trace no={traceNo} spans={spans} />}
       <p class="colophon-copy">© 2026 Fenil Ramoliya</p>
       <p class="colophon-credits">
-        Set in Newsreader and IBM Plex Mono. Figures are drawn by a small axonometric renderer written for this site, maps with
-        d3-geo from <a href="https://www.naturalearthdata.com">Natural Earth</a> and <a href="https://github.com/datameet/maps">DataMeet</a>{' '}
-        data (CC BY 4.0). Built with Astro and Bun.
+        Map data from <a href="https://www.naturalearthdata.com">Natural Earth</a> and{' '}
+        <a href="https://github.com/datameet/maps">DataMeet</a> (CC BY 4.0).
       </p>
     </footer>
 

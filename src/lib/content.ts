@@ -32,7 +32,7 @@ export type Legend = [string, string][];
 export const hero = {
   title: ['Fenil Ramoliya', 'likes watching things converge.'],
   lede:
-    'I build AI agents and the systems they run on, and I work on every layer of that: the harness and runtime around the model, the tools and protocols agents act through, and the infrastructure that keeps them fast, affordable and correct under real traffic. I do it at Cactus Communications, mostly on Paperpal, for an academic world I first knew as a researcher.',
+    'I build AI agents and the systems they run on. That includes runtimes that can resume interrupted work, the tools agents call, and the infrastructure that keeps them fast, affordable and reliable in production. I work at Cactus Communications, mostly on Paperpal, after starting out in academic research.',
 };
 
 export interface System {
@@ -56,13 +56,13 @@ export const systems: System[] = [
       'The harness decides what the model sees, which tools it may use, where its state lives, and what happens when a run stops for an approval and resumes an hour later on another machine. I have worked on that layer for assistants that carry multi-step work through to the end, from proof of concept to a phased production rollout.',
     inside: [
       'Planning and delegation: a supervisor breaks work into steps and hands them to sub-agents, each with scoped context and tools.',
-      'Durable execution. Every step is checkpointed, so a run survives interrupts, crashes and deploys.',
+      'Each step is checkpointed so a run can resume after interruptions, crashes and deploys.',
       'Human approval modelled as a state of the run, not an instruction in a prompt.',
       'Context engineering: what to load, what to compact and what to drop as a run grows.',
       'Streaming APIs kept apart from the workers that do the long tasks.',
       'Sandboxed code execution for analysis and generated files.',
     ],
-    stack: 'LangGraph · Deep Agents · FastAPI · Postgres',
+    stack: 'LangGraph, Deep Agents, FastAPI, Postgres',
     legend: [
       ['60', 'Context'],
       ['61', 'Plan'],
@@ -79,7 +79,7 @@ export const systems: System[] = [
     figNo: '3',
     name: 'Multi-agent architecture',
     body:
-      'Some problems need several kinds of expert judgement on the same input. The architecture I have worked on gives each kind its own specialist agent, runs them concurrently under one orchestrator, and reconciles their typed results into a single structured output. The real design work is at the boundaries: what each agent may see, how its output is validated, which model each role warrants, and how cost and latency are budgeted across a run.',
+      'I worked on a system that assigns different kinds of judgement to specialist agents. One orchestrator runs them concurrently and combines their typed results. The work covered what each agent can see, how to validate its output, which model fits each role, and how to budget cost and latency across a run.',
     inside: [
       'Fan-out and fan-in under one orchestrator, so a run takes as long as its slowest specialist, not the sum of all of them.',
       'Typed, validated contracts between agents. Nothing downstream parses prose.',
@@ -87,7 +87,7 @@ export const systems: System[] = [
       'Cache-aware prompt layout, with cost accounting that counts cache discounts.',
       'Tracing across every agent and tool call in a run.',
     ],
-    stack: 'async Python · Pydantic · structured outputs · Langfuse',
+    stack: 'Async Python, Pydantic, structured outputs, Langfuse',
     legend: [
       ['70', 'Input'],
       ['72', 'Orchestrator'],
@@ -101,7 +101,7 @@ export const systems: System[] = [
     figNo: '4',
     name: 'MCP servers',
     body:
-      'Model Context Protocol servers that put real services within reach of AI assistants, published on the Anthropic and OpenAI app marketplaces. The interesting problems are the ones demos skip: identity, large files, and tools that take minutes rather than seconds.',
+      'I worked on Model Context Protocol servers for AI assistants, published on the Anthropic and OpenAI app marketplaces. The servers handle user identity, large files, and jobs that take minutes to finish.',
     inside: [
       'A small, deliberate tool surface, designed around how models actually call tools.',
       'Large files go straight to object storage through presigned URLs, never through the model.',
@@ -109,7 +109,7 @@ export const systems: System[] = [
       'OAuth 2.0, with every token verified against an identity provider.',
       'Asynchronous jobs for long-running tools, with a status the model can poll.',
     ],
-    stack: 'TypeScript · MCP SDK · OAuth 2.0 · React',
+    stack: 'TypeScript, MCP SDK, OAuth 2.0, React',
     legend: [
       ['80', 'Assistant'],
       ['81', 'Authenticated connection'],
@@ -133,7 +133,7 @@ export const systems: System[] = [
       'Per-item checkpoints, so an interrupted run resumes instead of starting over.',
       'A written rationale with every output, so any result can be checked.',
     ],
-    stack: 'Python · AWS · queues · containers',
+    stack: 'Python, AWS, queues, containers',
     legend: [
       ['90', 'Input batch'],
       ['92', 'Queue'],
@@ -148,14 +148,14 @@ export const systems: System[] = [
     figNo: '6',
     name: 'Model platform',
     body:
-      'One interface to every model the products use: frontier models across Anthropic, OpenAI, Google and Bedrock, and in-house small and fine-tuned models served alongside them. Text and image, sync, async, streaming and batch. Configuration, fallbacks and staged rollouts live in one place, so a model change ships like any other release, measured. It serves about 1.2 million requests on an average day, which is also why it is where cost is won or lost.',
+      'One interface for proprietary models and smaller or fine-tuned models served in-house. The platform supports text and image workloads through synchronous, asynchronous, streaming and batch APIs. Teams manage configuration, fallbacks and staged rollouts in one place. The platform handles about 1.2 million requests on an average day.',
     inside: [
       'Caching audited per request, because a cache that looks enabled is not the same as one that hits.',
       'Prompts ordered so the stable, cacheable part always comes first.',
       'Batch APIs for work that can wait, real time only where someone is waiting.',
       'Throughput work: workload identity, rate limits, and concurrency that queues bursts instead of failing them.',
     ],
-    stack: 'Python · Anthropic · OpenAI · Gemini · Bedrock',
+    stack: 'Python, AWS Bedrock, Google Cloud Vertex AI',
     legend: [
       ['100', 'Gateway'],
       ['102', 'Prompt cache'],
@@ -166,23 +166,16 @@ export const systems: System[] = [
   },
 ];
 
-// what holds for anything built for researchers; shown under the systems
-export const principles = [
-  { name: 'The author stays the author.', text: 'Models suggest, explain and check. Every change is visible and reversible.' },
-  { name: 'Unpublished work is confidential.', text: 'A draft gets the least access, the shortest retention and no reuse.' },
-  { name: 'References must be real.', text: 'Every citation is checked against scholarly records before anyone sees it.' },
-];
-
 export const projects = [
   {
     name: 'roadtest',
-    text: 'Tests an AI agent from the outside before a release. Scenarios in YAML, checked by code and by a judge model, against an HTTP endpoint, a Python function or a command. A failed gate fails CI. On PyPI.',
+    text: 'Tests an AI agent before release against an HTTP endpoint, a Python function or a command. Write scenarios in YAML and check results with code and a judge model. A failed gate fails CI. Available on PyPI.',
     year: '2026',
     href: 'https://github.com/fenil210/roadtest',
   },
   {
     name: 'Whorl',
-    text: 'Offline file conversion from the Mac menu bar. Drag a file, pick a format, done. Its own DOCX reader and writer, PDFKit and Vision OCR, 133 tests.',
+    text: 'Convert files offline by dragging them to the Mac menu bar and choosing a format. Whorl has its own DOCX reader and writer, uses PDFKit and Vision OCR, and has 133 tests.',
     year: '2026',
     href: 'https://github.com/fenil210-cactus/whorl',
   },
@@ -194,7 +187,7 @@ export const projects = [
   },
   {
     name: 'mcp-doctor',
-    text: 'Local-first diagnostics for MCP servers and coding-agent plugin setups. On PyPI as agent-plugin-diagnostics.',
+    text: 'Runs local diagnostics for MCP servers and coding-agent plugin setups. Install it from PyPI as agent-plugin-diagnostics.',
     year: '2026',
     href: 'https://github.com/fenil210/mcp-doctor',
   },

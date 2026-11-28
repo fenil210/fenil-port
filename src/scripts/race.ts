@@ -4,12 +4,11 @@
    the loss at the point of the surface nearest the eye there, so up close it is all digits and from
    a step back it is lit terrain. Tone comes from opacity, not from the shape of the characters:
    light from the surface normal, haze with depth, colour from the loss (the low ground takes the
-   accent), and a brighter band wherever the loss crosses a contour level. A blurred copy underneath
-   gives the glow.
+   accent), and a brighter band wherever the loss crosses a contour level.
 
    Each surface runs one race and holds; then the next surface grows out of it in a ripple that
    starts at the new minimum, flipping the digits as it passes. A click or tap starts the race
-   again from that point. On wide screens the digits keep clear of the hero's text. */
+   again from that point. */
 
 import { newOpt, optNames, step, surfaces, type Opt, type OptName, type Surface, type Vec } from './descent';
 
@@ -20,10 +19,9 @@ const SHADES = 12; // colours from the accent (low loss) to the ink (high)
 const LEVELS = 14; // contour levels across the surface's range
 const HS = 1; // height of the surface against its half-width
 const PITCH = 0.75; // camera elevation, radians
-const BASE_YAW = -0.5;
+const YAW = -0.5;
 const CAMD = 3.2; // camera distance; also the focal length, so the middle draws at scale 1
 const LIGHT = norm([-0.45, 0.6, 0.66]);
-const INTRO = 2600;
 const RACE = 8500;
 const HOLD = 2600;
 const MORPH = 2800;
@@ -62,12 +60,12 @@ export function initRace(reduced: boolean) {
   const fig = document.querySelector<HTMLElement>('.race');
   const box = fig?.querySelector<HTMLElement>('.race-art');
   const canvas = box?.querySelector<HTMLCanvasElement>('canvas.race-sharp');
-  const glow = box?.querySelector<HTMLCanvasElement>('canvas.race-glow');
-  if (!fig || !box || !canvas || !glow) return;
+  if (!fig || !box || !canvas) return;
   const ctx = canvas.getContext('2d')!;
-  const gctx = glow.getContext('2d')!;
   const nameEl = fig.querySelector<HTMLElement>('.race-name')!;
   const stepEl = fig.querySelector<HTMLElement>('.race-step')!;
+  const controls = fig.querySelector<HTMLElement>('.race-controls')!;
+  const pauseButton = controls.querySelector<HTMLButtonElement>('[data-action="pause"]')!;
   const lossEl = new Map(optNames.map((n) => [n, fig.querySelector<HTMLElement>(`[data-opt="${n}"] .race-loss`)!]));
   const narrow = matchMedia('(max-width: 1100px)');
   const N = narrow.matches ? 181 : 261; // samples per side
@@ -89,10 +87,9 @@ export function initRace(reduced: boolean) {
   let accent = '#88f';
   let paper = '#000';
 
-  // per cell: nearest depth, the sample that won it, and how far it is from the hero's text
+  // per cell: nearest depth and the sample that won it
   let depth = new Float32Array(0);
   let pick = new Int32Array(0);
-  let keep = new Float32Array(0);
 
   // the surface on an N×N grid: heights in [0, 1] before (A) and after (B) the ripple, what is
   // drawn now, the digit each sample shows, and each sample's distance from where the ripple starts
@@ -112,20 +109,20 @@ export function initRace(reduced: boolean) {
   const tf = (f: number) => (sf.log ? Math.log1p(Math.max(0, f) / sf.log) : f);
 
   // projection for the current frame
-  let cyw = 1;
-  let syw = 0;
+  const cyw = Math.cos(YAW);
+  const syw = Math.sin(YAW);
   let cx = 0;
   let cy = 0;
   let S = 1;
-  let fade = 0;
-  let trail = 0;
+  let trail = 1;
 
   // the race
   let opts: Opt[] = [];
   let done = 0;
   let owed = 0;
-  let phase: 'intro' | 'race' | 'hold' | 'morph' = 'intro';
-  let since = 0;
+  let phase: 'race' | 'hold' | 'morph' = 'race';
+  let elapsed = 0;
+  let paused = false;
   let pointer: [number, number] | null = null;
   let probe: Vec | null = null;
   let seen = false;
@@ -253,10 +250,7 @@ export function initRace(reduced: boolean) {
     if (!W || !H) return false;
     canvas!.width = W;
     canvas!.height = H;
-    glow!.width = Math.round(W / 4);
-    glow!.height = Math.round(H / 4);
-    const wide = !narrow.matches;
-    px = wide ? 6.5 : 5.5;
+    px = r.width > 450 ? 6.5 : 6;
     mono = getComputedStyle(document.documentElement).getPropertyValue('--mono').trim() || 'monospace';
     ctx.font = `${px * dpr}px ${mono}`;
     cw = ctx.measureText('0').width;
@@ -266,39 +260,11 @@ export function initRace(reduced: boolean) {
     rows = Math.floor(H / ch);
     depth = new Float32Array(cols * rows);
     pick = new Int32Array(cols * rows);
-    // right of the copy on wide screens, in the middle on narrow ones
-    cx = W * (wide ? 0.743 : 0.5);
-    cy = H * (wide ? 0.4 : 0.5);
-    S = Math.min(W * (wide ? 0.188 : 0.37), H * (wide ? 0.325 : 0.42));
-    keepOut(r, wide);
+    cx = W / 2;
+    cy = H * 0.53;
+    S = Math.min(W * 0.30, H * 0.40);
     paint();
     return true;
-  }
-
-  /** per cell, 0 on the hero's text and rising to 1 a little way off it, so no digit sits under a word */
-  function keepOut(base: DOMRect, wide: boolean) {
-    keep = new Float32Array(cols * rows).fill(1);
-    if (!wide) return;
-    const pad = 56 * dpr;
-    const range = document.createRange();
-    for (const el of document.querySelectorAll('.hero-copy > *, .race figcaption')) {
-      range.selectNodeContents(el);
-      for (const t of range.getClientRects()) {
-        const x0 = (t.left - base.left) * dpr;
-        const x1 = (t.right - base.left) * dpr;
-        const y0 = (t.top - base.top) * dpr;
-        const y1 = (t.bottom - base.top) * dpr;
-        const c1 = Math.min(cols - 1, Math.ceil((x1 + pad) / cw));
-        const r1 = Math.min(rows - 1, Math.ceil((y1 + pad) / ch));
-        for (let r = Math.max(0, Math.floor((y0 - pad) / ch)); r <= r1; r++)
-          for (let c = Math.max(0, Math.floor((x0 - pad) / cw)); c <= c1; c++) {
-            const sx = (c + 0.5) * cw;
-            const sy = (r + 0.5) * ch;
-            const v = clamp(Math.hypot(Math.max(x0 - sx, 0, sx - x1), Math.max(y0 - sy, 0, sy - y1)) / pad);
-            keep[r * cols + c] = Math.min(keep[r * cols + c], smooth(v));
-          }
-      }
-    }
   }
 
   /** the glyph atlas: every digit in every shade from the accent to the ink */
@@ -323,46 +289,48 @@ export function initRace(reduced: boolean) {
     }
   }
 
-  function advance(now: number, dt: number) {
-    const t = now - since;
-    if (phase === 'intro' || phase === 'morph') {
-      m = Math.min(1, t / (phase === 'intro' ? INTRO : MORPH));
-      if (phase === 'intro') fade = Math.min(1, t / 500);
+  function advance(dt: number) {
+    elapsed += dt;
+    if (phase === 'morph') {
+      m = Math.min(1, elapsed / MORPH);
       trail = clamp((m - 0.7) / 0.3);
-      if (m >= 1) (phase = 'race'), (since = now);
+      if (m >= 1) {
+        phase = 'race';
+        elapsed = 0;
+      }
     } else if (phase === 'race') {
       trail = 1;
       owed += (dt * sf.steps) / RACE;
       const n = Math.floor(owed);
       owed -= n;
       run(n);
-      if (done >= sf.steps) (phase = 'hold'), (since = now);
+      if (done >= sf.steps) {
+        phase = 'hold';
+        elapsed = 0;
+      }
     } else {
-      trail = clamp((HOLD - t) / 600);
-      if (t >= HOLD) {
+      trail = clamp((HOLD - elapsed) / 600);
+      if (elapsed >= HOLD) {
         load((si + 1) % surfaces.length);
         start();
         phase = 'morph';
-        since = now;
+        elapsed = 0;
         trail = 0;
       }
     }
   }
 
   function frame(now: number, dt: number) {
-    if (!reduced) advance(now, dt);
+    if (!reduced && !paused && dt > 0) advance(dt);
     blend();
-    const yaw = BASE_YAW + (reduced ? 0 : Math.sin(now / 8000) * 0.24);
-    cyw = Math.cos(yaw);
-    syw = Math.sin(yaw);
-    draw(now, dt);
-    if (now - shown > 120 || reduced) {
+    draw(dt);
+    if (now - shown > 120 || dt === 0) {
       shown = now;
       readout();
     }
   }
 
-  function draw(now: number, dt: number) {
+  function draw(dt: number) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
@@ -391,7 +359,7 @@ export function initRace(reduced: boolean) {
     const gap = 4 / (N - 1);
     for (let q = 0; q < cols * rows; q++) {
       const k = pick[q];
-      if (k < 0 || keep[q] < 0.02) continue;
+      if (k < 0) continue;
       const i = k % N;
       const j = (k / N) | 0;
       const h = cur[k];
@@ -399,7 +367,7 @@ export function initRace(reduced: boolean) {
       const dy = ((cur[Math.min(N - 1, j + 1) * N + i] - cur[Math.max(0, j - 1) * N + i]) * HS) / gap;
       const lam = Math.max(0, (-dx * lx - dy * ly + LIGHT[2]) / Math.hypot(dx, dy, 1));
       const lum = 0.05 + 0.75 * lam + 0.5 * lam ** 18;
-      const fog = 1 - 0.62 * clamp((depth[q] + 1.3) / 2.6);
+      const fog = 1 - 0.4 * clamp((depth[q] + 1.3) / 2.6);
       // a contour level crossing between this cell and the next one right or down
       const c = q % cols;
       const right = c + 1 < cols ? pick[q + 1] : -1;
@@ -409,15 +377,14 @@ export function initRace(reduced: boolean) {
       // a thin ring in the middle of the ripple burns bright in the accent, where the digits flip
       const p = prog[k];
       const front = p > 0 && p < 1 ? Math.exp(-(((p - 0.5) / 0.13) ** 2)) : 0;
-      const alpha = Math.min(1, (0.12 + 0.88 * lum) * fog + (line ? 0.32 * fog : 0) + 0.8 * front) * fade * keep[q];
+      const alpha = Math.min(1, (0.24 + 0.76 * lum) * fog + (line ? 0.32 * fog : 0) + 0.8 * front);
       if (alpha < 0.03) continue;
       const shade = front > 0.4 ? 0 : Math.round(clamp(h / 0.7) ** 0.75 * (SHADES - 1));
       ctx.globalAlpha = alpha;
       ctx.drawImage(atlas, (p < 0.5 ? digA[k] : digB[k]) * tw, shade * ch, tw, ch, Math.round(c * cw), ((q / cols) | 0) * ch, tw, ch);
     }
 
-    // marks and paths add light
-    ctx.globalCompositeOperation = 'lighter';
+    // marks and paths sit on top of the digits
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     const ring = (x: number, y: number, r: number) => {
@@ -425,33 +392,26 @@ export function initRace(reduced: boolean) {
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.stroke();
     };
-    const keepAt = (sx: number, sy: number) => {
-      const q = cell(sx, sy);
-      return q < 0 ? 0 : keep[q];
-    };
     // labels for marks; one whose mark an optimizer is sitting on fades, as the name says it already
     const tags: { text: string; x: number; y: number; col: string; a: number; mark?: [number, number] }[] = [];
 
-    // each global minimum: a ring with a slow pulse going out from it
-    const beat = reduced ? 0.45 : (now % 2400) / 2400;
+    // mark each global minimum
     for (const [mx, my] of sf.mins) {
       const [sx, sy] = at(mx, my, 0.004);
-      const a = fade * reached(mx, my) * keepAt(sx, sy);
+      const a = reached(mx, my);
       if (a < 0.05) continue;
       ctx.strokeStyle = accent;
       ctx.lineWidth = 1.2 * dpr;
       ctx.globalAlpha = a;
       ring(sx, sy, 3.5 * dpr);
-      ctx.globalAlpha = a * (1 - beat) * 0.9;
-      ring(sx, sy, (3.5 + 16 * beat) * dpr);
       tags.push({ text: 'min', x: sx + 9 * dpr, y: sy + 9 * dpr, col: accent, a, mark: [sx, sy] });
     }
 
-    // the optimizers: a streak of light along each path, brighter toward the head
+    // the optimizers: a path with more contrast toward the head
     const heads: { o: Opt; x: number; y: number; a: number }[] = [];
     if (trail > 0.01) {
       const [s0, s1] = at(opts[0].path[0][0], opts[0].path[0][1]);
-      const sa = trail * fade * keepAt(s0, s1);
+      const sa = trail;
       ctx.strokeStyle = ink;
       ctx.lineWidth = dpr;
       ctx.globalAlpha = sa * 0.8;
@@ -470,13 +430,13 @@ export function initRace(reduced: boolean) {
         for (let p = 0; p < path.length; p++) {
           const [sx, sy, d] = at(path[p][0], path[p][1]);
           const q = cell(sx, sy);
-          const dim = q < 0 || depth[q] < d - 0.05 || keep[q] < 0.5;
+          const dim = q < 0 || depth[q] < d - 0.05;
           const run = Math.floor((p / path.length) * runs);
           const k = run * 2 + (dim ? 1 : 0);
           if (k !== key) {
             if (key >= 0) ctx.stroke();
             key = k;
-            ctx.globalAlpha = trail * fade * (0.2 + 0.8 * ((run + 1) / runs) ** 2) * (dim ? 0.3 : 1);
+            ctx.globalAlpha = trail * (0.2 + 0.8 * ((run + 1) / runs) ** 2) * (dim ? 0.3 : 1);
             ctx.beginPath();
             if (prev) ctx.moveTo(prev[0], prev[1]);
             else ctx.moveTo(sx, sy);
@@ -486,29 +446,12 @@ export function initRace(reduced: boolean) {
         }
         if (key >= 0) ctx.stroke();
       }
-      ctx.globalCompositeOperation = 'lighter';
       for (const o of opts) {
-        const col = o.name === 'adam' ? accent : ink;
         const [hx, hy] = at(o.p[0], o.p[1]);
-        const a = trail * fade * keepAt(hx, hy);
-        heads.push({ o, x: hx, y: hy, a });
-        // the lamp; the optimizer's own mark from the legend goes on top later
-        const g = ctx.createRadialGradient(hx, hy, 0, hx, hy, 11 * dpr);
-        g.addColorStop(0, col);
-        g.addColorStop(1, 'transparent');
-        ctx.globalAlpha = a * 0.55;
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(hx, hy, 11 * dpr, 0, Math.PI * 2);
-        ctx.fill();
+        heads.push({ o, x: hx, y: hy, a: trail });
       }
     }
 
-    // the glow: the whole frame, small and blurred by CSS, under the sharp one
-    gctx.clearRect(0, 0, glow!.width, glow!.height);
-    gctx.drawImage(canvas!, 0, 0, glow!.width, glow!.height);
-
-    // marks and labels go on after the glow is taken, so they stay crisp
     ctx.globalCompositeOperation = 'source-over';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -536,7 +479,7 @@ export function initRace(reduced: boolean) {
     together = near;
     const groups = new Map<number, typeof heads>();
     heads.forEach((h, i) => groups.set(find(i), [...(groups.get(find(i)) ?? []), h]));
-    const glide = reduced ? 1 : 1 - Math.exp(-dt / 70);
+    const glide = dt === 0 ? 1 : 1 - Math.exp(-dt / 70);
     for (const g of groups.values()) {
       const x = Math.max(...g.map((h) => h.x)) + 11 * dpr;
       const y = g.reduce((s, h) => s + h.y, 0) / g.length - ((g.length - 1) * LH) / 2;
@@ -548,7 +491,7 @@ export function initRace(reduced: boolean) {
     }
 
     probe = null;
-    if (pointer && fade > 0.9) {
+    if (pointer) {
       probe = pickAt(pointer[0], pointer[1]);
       if (probe) {
         const [mx, my] = pointer;
@@ -561,7 +504,7 @@ export function initRace(reduced: boolean) {
         ctx.moveTo(mx, my - 6 * dpr);
         ctx.lineTo(mx, my + 6 * dpr);
         ctx.stroke();
-        tags.push({ text: `loss ${fmt(sf.f(probe[0], probe[1]))} · click to start here`, x: mx + 12 * dpr, y: my, col: accent, a: 1 });
+        tags.push({ text: `loss ${fmt(sf.f(probe[0], probe[1]))}`, x: mx + 12 * dpr, y: my, col: accent, a: 1 });
       }
     }
     canvas!.style.cursor = probe ? 'none' : '';
@@ -571,6 +514,8 @@ export function initRace(reduced: boolean) {
     const placed: [number, number, number, number][] = [];
     const label = (text: string, x: number, y: number, col: string, a: number) => {
       const w = ctx.measureText(text).width;
+      x = clamp(x, 3 * dpr, W - w - 3 * dpr);
+      y = clamp(y, 7 * dpr, H - 7 * dpr);
       placed.push([x - 3 * dpr, y - 7 * dpr, x + w + 3 * dpr, y + 7 * dpr]);
       ctx.globalAlpha = a * 0.8;
       ctx.fillStyle = paper;
@@ -586,19 +531,20 @@ export function initRace(reduced: boolean) {
       const a = t.a * clamp((nearest - 12 * dpr) / (24 * dpr));
       if (a < 0.05) continue;
       const w = ctx.measureText(t.text).width;
+      const x = clamp(t.x, 3 * dpr, W - w - 3 * dpr);
       let y = t.y;
-      const hit = () => placed.some(([x0, y0, x1, y1]) => t.x - 3 * dpr < x1 && t.x + w + 3 * dpr > x0 && y - 7 * dpr < y1 && y + 7 * dpr > y0);
+      const hit = () => placed.some(([x0, y0, x1, y1]) => x - 3 * dpr < x1 && x + w + 3 * dpr > x0 && y - 7 * dpr < y1 && y + 7 * dpr > y0);
       for (let n = 0; n < 12 && hit(); n++) y += LH;
-      label(t.text, t.x, y, t.col, a);
+      label(t.text, x, y, t.col, a);
     }
     ctx.globalAlpha = 1;
   }
 
-  /** the surface point drawn at a pixel, if there is one and it is not under the text */
+  /** the surface point drawn at a pixel, if there is one */
   function pickAt(sx: number, sy: number): Vec | null {
     const q = cell(sx, sy);
     const k = q < 0 ? -1 : pick[q];
-    if (k < 0 || keep[q] < 0.5) return null;
+    if (k < 0) return null;
     const [x0, x1, y0, y1] = sf.box;
     return [x0 + ((x1 - x0) * (k % N)) / (N - 1), y0 + ((y1 - y0) * ((k / N) | 0)) / (N - 1)];
   }
@@ -610,7 +556,7 @@ export function initRace(reduced: boolean) {
 
   function loop(now: number) {
     raf = 0;
-    if (!seen) return;
+    if (!seen || paused) return;
     const dt = Math.min(100, now - last);
     if (dt >= 15) {
       last = now;
@@ -620,24 +566,44 @@ export function initRace(reduced: boolean) {
   }
 
   function kick() {
-    if (reduced) frame(performance.now(), 0);
-    else if (!raf && seen) {
+    frame(performance.now(), 0);
+    if (!reduced && !paused && !raf && seen) {
       last = performance.now();
       raf = requestAnimationFrame(loop);
     }
   }
 
+  function restart(from?: Vec) {
+    start(from);
+    if (reduced) run(sf.steps);
+    phase = 'race';
+    elapsed = 0;
+    m = trail = 1;
+    kick();
+  }
+
   const family = getComputedStyle(document.documentElement).getPropertyValue('--mono');
   (document.fonts?.load(`10px ${family}`) ?? Promise.resolve()).then(() => {
     load(0);
-    start();
-    if (reduced) {
-      run(sf.steps);
-      m = fade = trail = 1;
-      phase = 'hold';
-    }
-    since = performance.now();
     if (!measure()) return;
+    restart();
+    pauseButton.hidden = reduced;
+    controls.hidden = false;
+
+    pauseButton.addEventListener('click', () => {
+      paused = !paused;
+      pauseButton.textContent = paused ? 'Resume' : 'Pause';
+      if (paused) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+      kick();
+    });
+    controls.querySelector('[data-action="restart"]')!.addEventListener('click', () => restart());
+    controls.querySelector('[data-action="next"]')!.addEventListener('click', () => {
+      load((si + 1) % surfaces.length);
+      restart();
+    });
 
     new IntersectionObserver(([e]) => {
       seen = e.isIntersecting;
@@ -662,21 +628,15 @@ export function initRace(reduced: boolean) {
 
     canvas.addEventListener('pointermove', (e) => {
       pointer = e.pointerType === 'mouse' ? [e.offsetX * dpr, e.offsetY * dpr] : null;
-      if (reduced) frame(performance.now(), 0);
+      if (reduced || paused) frame(performance.now(), 0);
     });
     canvas.addEventListener('pointerleave', () => {
       pointer = null;
-      if (reduced) frame(performance.now(), 0);
+      if (reduced || paused) frame(performance.now(), 0);
     });
     canvas.addEventListener('click', (e) => {
       const p = pickAt(e.offsetX * dpr, e.offsetY * dpr);
-      if (!p) return;
-      start(p);
-      if (reduced) run(sf.steps);
-      phase = 'race';
-      since = performance.now();
-      m = fade = trail = 1;
-      kick();
+      if (p) restart(p);
     });
   });
 }

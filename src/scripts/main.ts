@@ -1,5 +1,3 @@
-import type { Frame } from '../lib/axo';
-import type { FigureName } from '../lib/scenes';
 import { initGlobe } from './globe';
 import { initMatrix } from './matrix';
 import { initRace } from './race';
@@ -10,76 +8,92 @@ initRace(reduced);
 
 /* ───────── figures ───────── */
 
-interface Fig {
-  svg: SVGSVGElement;
-  name: FigureName;
-  box: Frame['box'];
-  drawn: boolean;
-  /** drawing units per screen pixel */
-  k: number;
-}
-
-const figs = new Map<SVGSVGElement, Fig>();
-
 const sizeIO = new ResizeObserver((entries) => {
   for (const e of entries) {
     const svg = e.target as SVGSVGElement;
     const w = e.contentRect.width;
     const vb = svg.viewBox.baseVal;
     if (!(w > 0 && vb.width > 0)) continue;
-    const f = figs.get(svg);
-    if (f) f.k = vb.width / w;
     svg.style.setProperty('--k', String(vb.width / w));
   }
 });
 
-function draw(f: Fig) {
-  if (f.drawn) return;
-  f.drawn = true;
-  const svg = f.svg;
-  if (reduced) {
-    svg.classList.remove('pre');
-    return;
+document.querySelectorAll<SVGSVGElement>('svg.axo').forEach((svg) => sizeIO.observe(svg));
+
+/* ───────── work: sticky diagrams and draw-on ───────── */
+
+if (!reduced) initSystemMotion();
+
+function initSystemMotion() {
+  const systems = document.querySelector<HTMLElement>('.systems');
+  const stage = systems?.querySelector<HTMLElement>('.stage-inner');
+  if (!systems || !stage) return;
+
+  const panels = [...systems.querySelectorAll<HTMLElement>('.system')].flatMap((system) => {
+    const figure = system.querySelector('figure');
+    const svg = figure?.querySelector<SVGSVGElement>('svg.axo');
+    return figure && svg ? [{ system, figure, svg }] : [];
+  });
+  if (!panels.length) return;
+
+  const wide = matchMedia('(min-width: 1101px)');
+  let current = panels[0];
+
+  function draw(svg: SVGSVGElement) {
+    if (!svg.classList.contains('pre')) return;
+    svg.classList.replace('pre', 'drawing');
+    const strokes = svg.querySelectorAll('path[pathLength]').length;
+    setTimeout(() => svg.classList.remove('drawing'), strokes * 5 + 1700);
   }
-  svg.classList.remove('pre');
-  svg.classList.add('drawing');
-  const n = svg.querySelectorAll('path[pathLength]').length;
-  setTimeout(() => svg.classList.remove('drawing'), n * 5 + 1700);
-}
 
-const drawIO = new IntersectionObserver(
-  (entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      const f = figs.get(e.target as SVGSVGElement);
-      if (f && !f.svg.closest('.stage-fig:not(.on)')) draw(f);
+  function showCurrent() {
+    for (const panel of panels) {
+      const on = panel === current;
+      panel.system.classList.toggle('is-active', on);
+      panel.figure.classList.toggle('on', on);
     }
-  },
-  { threshold: 0.25 },
-);
+  }
 
-document.querySelectorAll<SVGSVGElement>('svg.axo').forEach((svg) => {
-  const f: Fig = {
-    svg,
-    name: svg.dataset.scene as FigureName,
-    box: (svg.dataset.box ?? '').split(' ').map(Number) as Frame['box'],
-    drawn: false,
-    k: parseFloat(svg.style.getPropertyValue('--k')) || 1,
+  const drawObserver = new IntersectionObserver((entries) => {
+    for (const { target, isIntersecting } of entries) {
+      if (isIntersecting && !target.closest('.stage-fig:not(.on)')) draw(target as SVGSVGElement);
+    }
+  }, { threshold: 0.25 });
+
+  const sectionObserver = new IntersectionObserver((entries) => {
+    const visible = entries.findLast((entry) => entry.isIntersecting);
+    const panel = panels.find((entry) => entry.system === visible?.target);
+    if (!panel) return;
+    current = panel;
+    if (!wide.matches) return;
+    showCurrent();
+    draw(panel.svg);
+  }, { rootMargin: '-45% 0px -45% 0px' });
+
+  // Keep the figures with their entries on narrow screens and without JavaScript.
+  const place = () => {
+    const staged = wide.matches;
+    systems.classList.toggle('has-stage', staged);
+    for (const panel of panels) {
+      panel.figure.classList.toggle('stage-fig', staged);
+      (staged ? stage : panel.system).append(panel.figure);
+    }
+    if (staged) showCurrent();
   };
-  figs.set(svg, f);
-  svg.classList.add('pre');
-  sizeIO.observe(svg);
-  drawIO.observe(svg);
-});
+
+  place();
+  for (const { system, svg } of panels) {
+    svg.classList.add('pre');
+    drawObserver.observe(svg);
+    sectionObserver.observe(system);
+  }
+  wide.addEventListener('change', place);
+}
 
 /* reference chips ↔ figure parts */
 
 function figureFor(el: Element): SVGSVGElement | null {
-  const own = el.closest('figure')?.querySelector<SVGSVGElement>('svg.axo');
-  if (own) return own;
-  const system = el.closest<HTMLElement>('.system');
-  if (system) return document.querySelector<SVGSVGElement>(`svg.axo[data-scene="${system.dataset.fig}"]`);
-  return el.closest('section')?.querySelector<SVGSVGElement>('svg.axo') ?? null;
+  return el.closest('figure')?.querySelector<SVGSVGElement>('svg.axo') ?? null;
 }
 
 function highlight(svg: SVGSVGElement | null, ref: string | null) {
@@ -87,71 +101,13 @@ function highlight(svg: SVGSVGElement | null, ref: string | null) {
   svg.querySelectorAll('.is-hl').forEach((n) => n.classList.remove('is-hl'));
   svg.classList.toggle('has-hl', !!ref);
   svg.dataset.hl = ref ?? '';
-  lift(svg, ref);
   if (!ref) return;
   svg.querySelectorAll<SVGElement>('[data-tag]').forEach((n) => {
     if (n.dataset.tag!.split(' ').includes(ref)) n.classList.add('is-hl');
   });
 }
 
-/* the highlighted part lifts out of the drawing on a spring; labels and leaders stay put */
-
-const LIFT = 7; // screen px
-const STIFF = 190;
-const DAMP = 15; // a little under critical, so the part overshoots and settles
-interface Spring {
-  y: number;
-  v: number;
-  t: number;
-}
-const lifts = new Map<SVGSVGElement, Map<string, Spring>>();
-let liftFrame = 0;
-let liftLast = 0;
-
-function lift(svg: SVGSVGElement, ref: string | null) {
-  if (reduced) return;
-  let parts = lifts.get(svg);
-  if (!parts) lifts.set(svg, (parts = new Map()));
-  parts.forEach((s, r) => (s.t = r === ref ? LIFT : 0));
-  if (ref && !parts.has(ref)) parts.set(ref, { y: 0, v: 0, t: LIFT });
-  if (!liftFrame) liftFrame = requestAnimationFrame(stepLifts);
-}
-
-function applyLift(svg: SVGSVGElement) {
-  const parts = lifts.get(svg);
-  const k = figs.get(svg)?.k ?? 1;
-  svg.querySelectorAll<SVGElement>('[data-tag]:not(.leader):not(text)').forEach((el) => {
-    let y = 0;
-    for (const t of el.dataset.tag!.split(' ')) y = Math.max(y, parts?.get(t)?.y ?? 0);
-    el.style.transform = y > 0.01 ? `translate(0px, ${(-y * k).toFixed(3)}px)` : '';
-  });
-}
-
-function stepLifts(now: number) {
-  const dt = liftLast ? Math.min(0.034, (now - liftLast) / 1000) : 1 / 60;
-  liftLast = now;
-  let moving = false;
-  lifts.forEach((parts, svg) => {
-    parts.forEach((s, ref) => {
-      for (let i = 0; i < 4; i++) {
-        s.v += (-STIFF * (s.y - s.t) - DAMP * s.v) * (dt / 4);
-        s.y += s.v * (dt / 4);
-      }
-      if (Math.abs(s.y - s.t) > 0.02 || Math.abs(s.v) > 0.02) moving = true;
-      else {
-        s.y = s.t;
-        s.v = 0;
-        if (!s.t) parts.delete(ref);
-      }
-    });
-    applyLift(svg);
-    if (!parts.size) lifts.delete(svg);
-  });
-  liftFrame = moving ? requestAnimationFrame(stepLifts) : 0;
-  if (!moving) liftLast = 0;
-}
-
-/** the tagged part whose face is under the pointer, tested against resting geometry so a lifted part never slips out from under it */
+/** the tagged part whose face is under the pointer, tested against the filled SVG geometry */
 function partAt(svg: SVGSVGElement, x: number, y: number): string | null {
   const m = svg.getScreenCTM();
   if (!m) return null;
@@ -206,14 +162,12 @@ document.querySelectorAll<SVGSVGElement>('svg.axo').forEach((svg) => {
 });
 
 function chipsFor(svg: SVGSVGElement, ref: string | null) {
-  const scope = svg.closest('section');
-  scope?.querySelectorAll<HTMLElement>('.ref').forEach((c) => {
-    const near = figureFor(c) === svg;
-    c.classList.toggle('is-hl', !!ref && near && c.dataset.ref === ref);
+  svg.closest('figure')?.querySelectorAll<HTMLElement>('[data-ref]').forEach((c) => {
+    c.classList.toggle('is-hl', !!ref && c.dataset.ref === ref);
   });
 }
 
-document.querySelectorAll<HTMLElement>('.ref').forEach((chip) => {
+document.querySelectorAll<HTMLButtonElement>('.legend button[data-ref]').forEach((chip) => {
   const on = () => {
     const svg = figureFor(chip);
     highlight(svg, chip.dataset.ref ?? null);
@@ -225,7 +179,11 @@ document.querySelectorAll<HTMLElement>('.ref').forEach((chip) => {
     if (svg) chipsFor(svg, null);
   };
   chip.addEventListener('pointerenter', on);
-  chip.addEventListener('pointerleave', off);
+  chip.addEventListener('pointerleave', () => {
+    if (document.activeElement !== chip) off();
+  });
+  chip.addEventListener('focus', on);
+  chip.addEventListener('blur', off);
   chip.addEventListener('click', on);
 });
 
@@ -246,57 +204,9 @@ document.addEventListener('pointerover', (e) => {
   );
 });
 
-/* ───────── work: sticky stage ───────── */
-
-const systems = [...document.querySelectorAll<HTMLElement>('.system')];
-const stageFigs = new Map<string, HTMLElement>();
-document.querySelectorAll<HTMLElement>('.stage-fig').forEach((el) => stageFigs.set(el.dataset.fig!, el));
-const stageHome = document.querySelector<HTMLElement>('.stage-inner');
-
-function activate(sys: HTMLElement) {
-  systems.forEach((s) => s.classList.toggle('is-active', s === sys));
-  stageFigs.forEach((el, name) => {
-    const on = name === sys.dataset.fig;
-    el.classList.toggle('on', on);
-    if (on) {
-      const svg = el.querySelector<SVGSVGElement>('svg.axo');
-      const f = svg && figs.get(svg);
-      if (f) draw(f);
-    }
-  });
-}
-
-const sysIO = new IntersectionObserver(
-  (entries) => {
-    for (const e of entries) if (e.isIntersecting) activate(e.target as HTMLElement);
-  },
-  { rootMargin: '-45% 0px -45% 0px' },
-);
-systems.forEach((s) => sysIO.observe(s));
-if (systems[0]) systems[0].classList.add('is-active');
-
-// on narrow screens each figure moves into its own entry
-const narrow = matchMedia('(max-width: 1100px)');
-function place() {
-  for (const sys of systems) {
-    const fig = stageFigs.get(sys.dataset.fig!);
-    if (!fig) continue;
-    if (narrow.matches) {
-      sys.querySelector('.fig-slot')?.append(fig);
-      fig.classList.add('on');
-    } else stageHome?.append(fig);
-  }
-  if (!narrow.matches) {
-    const active = systems.find((s) => s.classList.contains('is-active')) ?? systems[0];
-    if (active) activate(active);
-  }
-}
-narrow.addEventListener('change', place);
-place();
-
 /* ───────── fig. 7: paper matrix ───────── */
 
-initMatrix(reduced);
+initMatrix();
 
 /* ───────── fig. 8: experience on a year scale ───────── */
 
@@ -308,20 +218,6 @@ if (chart) {
   const t1 = Number(chart.dataset.t1);
   const today = d.getFullYear() + (d.getMonth() + (d.getDate() - 1) / 31) / 12;
   chart.style.setProperty('--now', String(Math.min(100, ((today - t0) / (t1 - t0)) * 100)));
-
-  if (!reduced) {
-    chart.classList.add('pre');
-    new IntersectionObserver(
-      ([e], io) => {
-        if (!e.isIntersecting) return;
-        chart.classList.add('drawing');
-        requestAnimationFrame(() => chart.classList.remove('pre'));
-        setTimeout(() => chart.classList.remove('drawing'), chart.querySelectorAll('.stint').length * 160 + 1600);
-        io.disconnect();
-      },
-      { threshold: 0.35 },
-    ).observe(chart);
-  }
 }
 
 /* ───────── fig. 9 and 10: travel ───────── */

@@ -1,5 +1,4 @@
 ---
-import Arrow from '../../components/Arrow.astro';
 import Base from '../../layouts/Base.astro';
 import { fmt, href, iso, mins, rendered, series } from '../../lib/articles';
 import { articlesGraph } from '../../lib/schema';
@@ -51,14 +50,12 @@ const posts = list.map((a) => ({ title: a.data.title, description: a.data.descri
                     </span>
                     <span class="shelf-min">{mins(a.prose.minutes)} min</span>
                   </span>
-                  <Arrow />
                 </a>
               </li>
             ))
           }
         </ol>
         <figcaption>
-          <span class="fig-no" aria-hidden="true">Fig. 1</span>{' '}
           <span>Reading time of each article.</span>
         </figcaption>
       </figure>
