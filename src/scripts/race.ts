@@ -123,6 +123,7 @@ export function initRace(reduced: boolean) {
   let phase: 'race' | 'hold' | 'morph' = 'race';
   let elapsed = 0;
   let paused = false;
+  let manualMorph = false;
   let pointer: [number, number] | null = null;
   let probe: Vec | null = null;
   let seen = false;
@@ -141,7 +142,8 @@ export function initRace(reduced: boolean) {
   /** the next surface becomes the target; what is drawn now is where the ripple starts from */
   function load(i: number) {
     hA.set(cur);
-    digA.set(digB);
+    // A new request can interrupt a ripple. Retain the digits currently visible at each sample.
+    for (let k = 0; k < NN; k++) if (prog[k] >= 0.5) digA[k] = digB[k];
     si = i;
     sf = surfaces[i];
     const [x0, x1, y0, y1] = sf.box;
@@ -297,6 +299,7 @@ export function initRace(reduced: boolean) {
       if (m >= 1) {
         phase = 'race';
         elapsed = 0;
+        manualMorph = false;
       }
     } else if (phase === 'race') {
       trail = 1;
@@ -311,17 +314,13 @@ export function initRace(reduced: boolean) {
     } else {
       trail = clamp((HOLD - elapsed) / 600);
       if (elapsed >= HOLD) {
-        load((si + 1) % surfaces.length);
-        start();
-        phase = 'morph';
-        elapsed = 0;
-        trail = 0;
+        nextSurface(false);
       }
     }
   }
 
   function frame(now: number, dt: number) {
-    if (!reduced && !paused && dt > 0) advance(dt);
+    if (!reduced && (!paused || manualMorph) && dt > 0) advance(dt);
     blend();
     draw(dt);
     if (now - shown > 120 || dt === 0) {
@@ -556,30 +555,45 @@ export function initRace(reduced: boolean) {
 
   function loop(now: number) {
     raf = 0;
-    if (!seen || paused) return;
+    if (!seen || (paused && !manualMorph)) return;
     const dt = Math.min(100, now - last);
     if (dt >= 15) {
       last = now;
       frame(now, dt);
     }
-    raf = requestAnimationFrame(loop);
+    if (!paused || manualMorph) raf = requestAnimationFrame(loop);
   }
 
   function kick() {
     frame(performance.now(), 0);
-    if (!reduced && !paused && !raf && seen) {
+    if (!reduced && (!paused || manualMorph) && !raf && seen) {
       last = performance.now();
       raf = requestAnimationFrame(loop);
     }
   }
 
   function restart(from?: Vec) {
+    manualMorph = false;
     start(from);
     if (reduced) run(sf.steps);
     phase = 'race';
     elapsed = 0;
     m = trail = 1;
     kick();
+  }
+
+  function nextSurface(manual = true) {
+    load((si + 1) % surfaces.length);
+    if (reduced) {
+      restart();
+      return;
+    }
+    start();
+    phase = 'morph';
+    elapsed = 0;
+    trail = 0;
+    manualMorph = manual && paused;
+    if (manual) kick();
   }
 
   const family = getComputedStyle(document.documentElement).getPropertyValue('--mono');
@@ -592,6 +606,7 @@ export function initRace(reduced: boolean) {
 
     pauseButton.addEventListener('click', () => {
       paused = !paused;
+      if (!paused) manualMorph = false;
       pauseButton.textContent = paused ? 'Resume' : 'Pause';
       if (paused) {
         cancelAnimationFrame(raf);
@@ -601,8 +616,7 @@ export function initRace(reduced: boolean) {
     });
     controls.querySelector('[data-action="restart"]')!.addEventListener('click', () => restart());
     controls.querySelector('[data-action="next"]')!.addEventListener('click', () => {
-      load((si + 1) % surfaces.length);
-      restart();
+      nextSurface();
     });
 
     new IntersectionObserver(([e]) => {

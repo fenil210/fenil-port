@@ -24,7 +24,7 @@ export const bio =
 
 export const contact = {
   intro: 'Write if you are building with agents, running LLMs in production, or want to talk about research.',
-  home: 'I live in Mumbai, on IST.',
+  home: 'I’m on India Standard Time.',
 };
 
 export type Legend = [string, string][];

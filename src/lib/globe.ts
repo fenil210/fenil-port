@@ -20,12 +20,12 @@ export interface Atlas {
 }
 
 export const SIZE = 600;
-const R = 268;
+export const RADIUS = 268;
 const C = SIZE / 2;
 /** the arcs leave from Mumbai */
 const FROM: [number, number] = [72.88, 19.08];
-/** the view that shows every place at once */
-export const VIEW: [number, number] = [-38, -16];
+/** an orthographic view that keeps all visited places on the visible hemisphere */
+export const VIEW: [number, number] = [-24, -24];
 
 const DEG = Math.PI / 180;
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -71,7 +71,7 @@ function arc(a: [number, number], b: [number, number], rotate: [number, number])
       pen = false;
       continue;
     }
-    out.push(`${pen ? 'L' : 'M'}${r1(C + R * x * h)} ${r1(C - R * y * h)}`);
+    out.push(`${pen ? 'L' : 'M'}${r1(C + RADIUS * x * h)} ${r1(C - RADIUS * y * h)}`);
     pen = true;
   }
   return out.join('');
@@ -85,7 +85,7 @@ export interface View {
 }
 
 export function drawGlobe(atlas: Atlas, view: View): string {
-  const proj = geoOrthographic().scale(R).translate([C, C]).rotate(view.rotate).clipAngle(90).precision(0.4);
+  const proj = geoOrthographic().scale(RADIUS).translate([C, C]).rotate(view.rotate).clipAngle(90).precision(0.4);
   const path = geoPath(proj).digits(1);
   const [slon, slat] = subsolar(view.now);
   const night = geoCircle().center([slon + 180, -slat]).radius(90)();
@@ -111,19 +111,24 @@ export function drawGlobe(atlas: Atlas, view: View): string {
 
   atlas.places.forEach((p, i) => {
     const d = arc(FROM, p.at, view.rotate);
-    if (!d) return;
-    parts.push(`<path class="g-arc${hot(p.id)}" pathLength="1" d="${d}"/>`);
-    parts.push(`<path class="g-comet" pathLength="1" d="${d}" style="animation-delay:${(i * 0.7).toFixed(1)}s"/>`);
+    parts.push(`<path class="g-arc${hot(p.id)}" data-id="${p.id}" pathLength="1" d="${d}"/>`);
+    parts.push(`<path class="g-comet" data-id="${p.id}" pathLength="1" d="${d}" style="animation-delay:${(i * 0.7).toFixed(1)}s"/>`);
   });
 
-  // each place carries its number where its arc lands
+  // Move Ireland's label west into the Atlantic so it cannot cover its small country outline.
+  // The arc and leader remain anchored to the actual country centroid.
   atlas.places.forEach((p, i) => {
-    if (!front(p.at)) return;
     const [x, y] = proj(p.at)!;
+    const visible = front(p.at) ? 'visible' : 'hidden';
+    const labelX = p.id === '372' ? x - 30 : x;
+    const labelY = p.id === '372' ? y - 17 : y;
+    const leader = p.id === '372' ? `M${r1(x)} ${r1(y)}L${r1(labelX + 9)} ${r1(labelY + 4)}` : '';
+    parts.push(`<path class="g-leader${hot(p.id)}" data-id="${p.id}" visibility="${visible}" d="${leader}"/>`);
     parts.push(
-      `<g class="g-pin${hot(p.id)}" data-id="${p.id}" aria-hidden="true">` +
-        `<rect x="${r1(x - 9)}" y="${r1(y - 9)}" width="18" height="18" rx="3"/>` +
-        `<text x="${r1(x)}" y="${r1(y + 0.5)}" text-anchor="middle" dominant-baseline="central">${i + 1}</text>` +
+      `<g class="g-pin${hot(p.id)}" data-id="${p.id}" visibility="${visible}" aria-hidden="true">` +
+        `<rect class="g-pin-hit" x="${r1(labelX - 10)}" y="${r1(labelY - 10)}" width="20" height="20"/>` +
+        `<rect class="g-pin-box" x="${r1(labelX - 10)}" y="${r1(labelY - 10)}" width="20" height="20" rx="3"/>` +
+        `<text x="${r1(labelX)}" y="${r1(labelY + 0.5)}" text-anchor="middle" dominant-baseline="central">${i + 1}</text>` +
         `</g>`,
     );
   });

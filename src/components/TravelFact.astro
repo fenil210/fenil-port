@@ -1,0 +1,30 @@
+---
+interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+---
+
+<div class="travel-fact" hidden>
+  <div class="fact-area">
+    <p class="fact-hint">Hover briefly or select a place for a fact.</p>
+    <div class="fact-result" id={id} hidden>
+      <div class="fact-copy-area">
+        <div class="fact-copy">
+          <div class="fact-heading">
+            <p class="fact-place"></p>
+            <span class="fact-note"></span>
+          </div>
+          <p class="fact-text"></p>
+        </div>
+      </div>
+      <div class="fact-actions">
+        <a class="fact-source"></a>
+        <button class="fact-next" type="button">Next fact</button>
+        <button class="fact-dismiss" type="button">Dismiss</button>
+      </div>
+    </div>
+  </div>
+  <p class="fact-announcement" role="status"></p>
+</div>

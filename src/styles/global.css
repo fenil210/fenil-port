@@ -1586,13 +1586,14 @@ h2 {
   width: 100%;
   height: auto;
   overflow: visible;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .globe-svg {
   cursor: grab;
   touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
 }
 
 .globe-svg.is-dragging {
@@ -1610,7 +1611,8 @@ h2 {
 /* the states, painted together; a stroke of the same colour closes the seams between them */
 .g-india { fill: var(--tint); stroke: var(--tint); stroke-width: 0.8; vector-effect: non-scaling-stroke; pointer-events: none; }
 .g-india-edge { fill: none; stroke: var(--accent); stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
-.g-place { fill: var(--tint); stroke: var(--accent); stroke-width: 1.1; vector-effect: non-scaling-stroke; transition: fill 0.25s; }
+.g-place { fill: var(--tint); stroke: var(--accent); stroke-width: 1.1; vector-effect: non-scaling-stroke; transition: fill 0.15s; }
+.g-place[data-id='372'] { fill: color-mix(in srgb, var(--accent) 44%, var(--paper)); }
 .g-place.is-hot { fill: var(--accent); }
 .g-night { fill: url(#g-hatch); pointer-events: none; }
 .g-limb { fill: none; stroke: var(--ink); stroke-width: 1.4; vector-effect: non-scaling-stroke; pointer-events: none; }
@@ -1645,11 +1647,13 @@ h2 {
   animation: comet 4.2s cubic-bezier(0.5, 0, 0.3, 1) infinite;
 }
 
-/* pins hold their size on screen as the globe shrinks */
-.g-pin { transform-box: fill-box; transform-origin: center; scale: var(--pin, 1); }
-.g-pin rect { fill: var(--paper); stroke: var(--accent); stroke-width: 1.2; transition: stroke-width 0.2s; }
-.g-pin text { fill: var(--accent); font: 500 11px var(--mono); pointer-events: none; }
-.g-pin.is-hot rect { stroke-width: 2.2; }
+.g-leader { fill: none; stroke: var(--accent); stroke-width: 0.9; vector-effect: non-scaling-stroke; pointer-events: none; }
+.g-pin-box { fill: var(--paper); stroke: var(--accent); stroke-width: 1; vector-effect: non-scaling-stroke; transition: stroke-width 0.18s ease-out; }
+.g-pin-hit { fill: transparent; stroke: transparent; stroke-width: 16; vector-effect: non-scaling-stroke; }
+.g-pin text { fill: var(--accent); font: 500 13px var(--mono); pointer-events: none; }
+.g-pin.is-hot .g-pin-box { stroke-width: 1.7; }
+.js :is(.g-place, .g-pin, .india .region) { cursor: pointer; }
+.globe-svg.is-dragging :is(.g-place, .g-pin) { cursor: grabbing; }
 
 /* captions: the figure number, then a list, then its key */
 
@@ -1661,6 +1665,11 @@ h2 {
   max-width: none;
 }
 
+.atlas .fig-no {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .places ol,
 .states {
   border-block: 1px solid var(--rule);
@@ -1668,11 +1677,9 @@ h2 {
 
 .places ol li {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   column-gap: var(--s2);
-  padding-block: 6px;
-  cursor: default;
 }
 
 .places ol li + li {
@@ -1695,11 +1702,52 @@ h2 {
 
 .place {
   color: var(--ink);
-  transition: color 0.2s;
 }
 
 .places li.is-hl .place {
   color: var(--accent);
+}
+
+.place-trigger,
+.fact-actions button,
+.fact-control {
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--faint);
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.place-trigger:disabled {
+  cursor: default;
+  text-decoration: none;
+}
+
+.places ol .place-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+  text-decoration: none;
+}
+
+.place-trigger:enabled .place {
+  text-decoration: underline;
+  text-decoration-color: var(--faint);
+  text-underline-offset: 0.2em;
+}
+
+.place-trigger:enabled:hover,
+.place-trigger:enabled:hover .place,
+.fact-actions button:hover,
+.fact-control:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
 }
 
 .tz {
@@ -1731,6 +1779,14 @@ h2 {
   margin-left: var(--s2);
 }
 
+.globe-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 var(--s2);
+}
+
 .key-hatch {
   border-color: var(--accent);
   background: repeating-linear-gradient(-45deg, var(--accent) 0 1px, transparent 1px 3.5px);
@@ -1744,38 +1800,94 @@ h2 {
 }
 
 .states li {
-  padding-block: 2px;
-  color: var(--ink);
-  cursor: default;
-  transition: color 0.2s;
+  min-width: 0;
 }
 
-.states li.is-hl {
+.states .place-trigger {
+  width: 100%;
+}
+
+.states li.is-hl .place-trigger {
   color: var(--accent);
 }
 
-/* the key gives way to the region under the pointer */
-.readout {
+.travel-fact {
+  border-top: 1px solid var(--rule);
+}
+
+.fact-area {
+  padding-block: var(--s1) var(--s2);
+}
+
+.fact-area.is-resizing {
+  overflow: clip;
+}
+
+.fact-copy-area {
+  position: relative;
+  min-block-size: 74px;
+}
+
+.fact-copy-outgoing {
+  position: absolute;
+  inset: 0 0 auto;
+  pointer-events: none;
+}
+
+.fact-hint,
+.fact-note {
+  color: var(--muted);
+}
+
+.fact-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--s2);
+}
+
+.fact-actions {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: var(--s2);
 }
 
-.readout > * {
-  grid-area: 1 / 1;
-  transition: opacity 0.2s;
-}
-
-.readout-on,
-.readout.is-on .readout-default {
-  opacity: 0;
-}
-
-.readout.is-on .readout-on {
-  opacity: 1;
-}
-
-.readout b {
+.fact-place {
   color: var(--ink);
-  font-weight: 500;
+  font: 500 21px/1.2 var(--serif);
+}
+
+.fact-text {
+  margin-block: 5px 3px;
+  color: var(--ink);
+  font: 18px/1.4 var(--serif);
+  text-wrap: pretty;
+}
+
+.fact-source {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fact-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.india:has(.region:focus-visible) .map-key-hint {
+  position: static;
+  width: auto;
+  height: auto;
+  margin-block: 0 var(--s1);
+  color: var(--ink-2);
+  clip-path: none;
+  white-space: normal;
 }
 
 .india .region {
@@ -1783,7 +1895,8 @@ h2 {
   stroke: var(--ink-2);
   stroke-width: 0.7;
   stroke-linejoin: round;
-  transition: fill 0.2s, stroke 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  transition: stroke 0.18s ease-out;
 }
 
 .india .region.seen {
@@ -1792,14 +1905,21 @@ h2 {
   stroke-width: 0.9;
 }
 
-.india .region.is-on {
-  fill: var(--tint);
-  stroke: var(--accent);
-  stroke-width: 1.4;
+.india .region:focus {
+  outline: none;
 }
 
-.india .region.seen.is-on {
-  fill: var(--accent);
+.india .region:focus-visible {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.india .region-highlight {
+  fill: color-mix(in srgb, var(--accent) 78%, transparent);
+  stroke: var(--accent);
+  stroke-width: 1.35;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 
 #i-hatch line {
@@ -2975,8 +3095,8 @@ a.ref {
     row-gap: var(--s2);
   }
 
-  .globe-svg {
-    --pin: 1.6;
+  .fact-copy-area {
+    min-block-size: 88px;
   }
 
   .colophon {

@@ -72,6 +72,8 @@ export const indiaStates = (feature(india, india.objects.states).features as Fea
   geometry: rewind(f.geometry),
 }));
 
+export const indiaRegionName = (name: string) => name.replace(' & ', ' and ').replace(/^Andaman and Nicobar$/, 'Andaman and Nicobar Islands');
+
 const countries = feature(world, world.objects.countries).features as Feature<Shape, { name: string }>[];
 const landShape = (feature(land, land.objects.land) as unknown as { features: Feature<Shape>[] }).features[0].geometry;
 
@@ -89,6 +91,8 @@ export const atlas: Atlas = {
     const f = countries.find((x) => x.id === c.id);
     if (!f) throw new Error(`no outline for ${c.name}`);
     const [lon, lat] = geoCentroid(f);
-    return { id: c.id, shape: globeScale([f.geometry], 0.05, 1e-6), at: [Math.round(lon * 100) / 100, Math.round(lat * 100) / 100] };
+    // Keep the full country boundary for Ireland, including its border with Northern Ireland.
+    const shape = c.id === '372' ? { type: 'MultiPolygon' as const, coordinates: polys(f.geometry) } : globeScale([f.geometry], 0.05, 1e-6);
+    return { id: c.id, shape, at: [Math.round(lon * 100) / 100, Math.round(lat * 100) / 100] };
   }),
 };

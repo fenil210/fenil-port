@@ -2,9 +2,10 @@
 import Figure from '../components/Figure.astro';
 import IndiaMap from '../components/IndiaMap.astro';
 import Matrix from '../components/Matrix.astro';
+import TravelFact from '../components/TravelFact.astro';
 import Base from '../layouts/Base.astro';
 import { articles, fmt, href, iso } from '../lib/articles';
-import { atlas } from '../lib/atlas';
+import { atlas, indiaRegionName } from '../lib/atlas';
 import { drawGlobe, SIZE, VIEW } from '../lib/globe';
 import { bio, citedOn, contact, hero, links, meta, papers, path, projects, recognition, research, systems, travel } from '../lib/content';
 import { graph } from '../lib/schema';
@@ -268,19 +269,25 @@ const spans = [
             <figcaption>
               <span class="fig-no" aria-hidden="true">Fig. 9</span>{' '}
               <div class="places">
+                <TravelFact id="globe-fact" />
                 <ol>
                   {
                     travel.countries.map((c, i) => (
-                      <li data-id={c.id} data-at={atlas.places[i].at.join(' ')}>
-                        <span class="ref" aria-hidden="true">{i + 1}</span>{' '}
-                        <span class="place">{c.name}</span>
+                      <li data-id={c.id} data-name={c.name} data-at={atlas.places[i].at.join(' ')}>
+                        <button class="place-trigger" type="button" data-fact-id={c.id} aria-controls="globe-fact" disabled>
+                          <span class="ref" aria-hidden="true">{i + 1}</span>{' '}
+                          <span class="place">{c.name}</span>
+                        </button>
                         <time class="tz" data-tz={c.tz} />
                         <span class="key sky" />
                       </li>
                     ))
                   }
                 </ol>
-                <p class="keys"><span class="key key-night"></span>Night there now <span class="key"></span>Day</p>
+                <div class="globe-tools">
+                  <p class="keys"><span class="key key-night"></span>Night there now <span class="key"></span>Day</p>
+                  <button class="fact-control globe-reset" type="button" hidden>Reset view</button>
+                </div>
               </div>
             </figcaption>
           </figure>
@@ -290,11 +297,16 @@ const spans = [
             <figcaption>
               <span class="fig-no" aria-hidden="true">Fig. 10</span>{' '}
               <div class="places">
-                <ul class="states">{travel.states.map((s) => <li data-id={s}>{s.replace(' & ', ' and ')}</li>)}</ul>
-                <p class="keys readout" aria-live="polite">
-                  <span class="readout-default"><span class="key key-hatch"></span>Visited</span>
-                  <span class="readout-on"><b></b> <span></span></span>
-                </p>
+                <TravelFact id="india-fact" />
+                <p class="fact-announcement map-key-hint" id="india-map-keys">Use the arrow keys to move between regions. Press Enter or Space for a fact.</p>
+                <ul class="states">
+                  {travel.states.map((s) => (
+                    <li data-id={s}>
+                      <button class="place-trigger" type="button" data-fact-id={s} aria-controls="india-fact" disabled>{indiaRegionName(s)}</button>
+                    </li>
+                  ))}
+                </ul>
+                <p class="keys"><span class="key key-hatch"></span>Visited</p>
               </div>
             </figcaption>
           </figure>
@@ -308,13 +320,13 @@ const spans = [
         </p>
         <p class="intro">
           {contact.intro}{' '}
-          <span class="clock" data-tz="Asia/Kolkata">{contact.home}</span>
+          <span class="clock" data-tz="Asia/Kolkata">{contact.home}</span>{' '}
+          <a href={links.x} rel="me">Buzz me on X</a>.
         </p>
         <ul class="contact-links">
           <li><a href={links.github} rel="me">GitHub</a></li>
           <li><a href={links.linkedin} rel="me">LinkedIn</a></li>
           <li><a href={links.scholar}>Google Scholar</a></li>
-          <li><a href={links.x} rel="me">X</a></li>
         </ul>
       </section>
     </main>

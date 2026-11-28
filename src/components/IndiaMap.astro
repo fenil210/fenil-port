@@ -1,11 +1,10 @@
 ---
 import { geoConicConformal, geoPath } from 'd3-geo';
-import { indiaStates as regions, thin } from '../lib/atlas';
+import { indiaRegionName, indiaStates as regions, thin } from '../lib/atlas';
 import { travel } from '../lib/content';
 
 // union territories are drawn like the states; only the readout tells them apart
 const UTS = new Set(['Andaman & Nicobar', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu & Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry']);
-const display = (n: string) => n.replace(' & ', ' and ').replace(/^Andaman and Nicobar$/, 'Andaman and Nicobar Islands');
 const visited = new Set(travel.states);
 
 const W = 520;
@@ -36,7 +35,7 @@ const shapes = regions
   .map((f) => {
     const name = f.properties.ST_NM;
     const seen = visited.has(name);
-    return { d: draw(f), id: name, name: display(name), seen, note: `${UTS.has(name) ? 'Union territory' : 'State'}, ${seen ? 'visited' : 'not yet'}` };
+    return { d: draw(f), id: name, name: indiaRegionName(name), seen, note: `${UTS.has(name) ? 'Union territory' : 'State'}, ${seen ? 'visited' : 'not visited'}` };
   })
   // unvisited first, so a hatched state's outline is never painted over
   .sort((a, b) => Number(a.seen) - Number(b.seen));

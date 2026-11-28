@@ -1,4 +1,3 @@
-import { initGlobe } from './globe';
 import { initMatrix } from './matrix';
 import { initRace } from './race';
 
@@ -222,14 +221,22 @@ if (chart) {
 
 /* ───────── fig. 9 and 10: travel ───────── */
 
-initGlobe(reduced);
+const travel = document.getElementById('travel');
+if (travel) {
+  const loadMaps = () => import('./globe').then(({ initTravelMaps }) => initTravelMaps(reduced));
+  new IntersectionObserver(([entry], observer) => {
+    if (!entry.isIntersecting) return;
+    observer.disconnect();
+    loadMaps();
+  }, { rootMargin: '1000px 0px' }).observe(travel);
+}
 
 /* ───────── local time ───────── */
 
 const clock = document.querySelector<HTMLElement>('.clock');
 if (clock) {
   const fmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: clock.dataset.tz });
-  const set = () => (clock.textContent = `It is ${fmt.format(new Date())} in Mumbai right now.`);
+  const set = () => (clock.textContent = `It’s ${fmt.format(new Date())} here.`);
   set();
   setInterval(set, 30_000);
 }
